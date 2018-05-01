@@ -4,7 +4,9 @@ object Main {
 
   class GraphFactory[T] {
 
-    case class Edge(expectedAttributes: T)
+    case class VertexStates(states: Vertex)
+
+    case class Edge(attributes: T)
 
     case class Edges(edges: List[Edge])
 
@@ -13,14 +15,28 @@ object Main {
     sealed trait GraphElement
 
     case class Vertex(
-      expectedAttributes: Attributes,
-      expectedEdges: Edges
+      attributes: Attributes,
+      edges: Edges
+    )
+
+    def v(
+      attributes: Seq[T],
+      edges: List[Edge]
+    ) = Vertex(
+      Attributes(attributes),
+      Edges(edges)
     )
 
   }
 
   case class TargetAttribute(name: String, `type`: Class[_], mod: Mod)
-  val targetGraph = new GraphFactory[TargetAttribute]
+  val targetGraph = new GraphFactory[TargetAttribute] {
+    def a(
+      name: String,
+      `type`: Class[_],
+      mod: Mod
+    ) = TargetAttribute(name, `type`, mod)
+  }
 
   case class ExistingAttribute(name: String, value: Object)
   val existingGraph = new GraphFactory[ExistingAttribute]
@@ -33,30 +49,73 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val targetWorkflowInstance = targetGraph.Vertex(
-      expectedAttributes = targetGraph.Attributes(
-        List(TargetAttribute("jobUid", classOf[String], Required))
-      ),
-      expectedEdges = targetGraph.Edges(List.empty)
-    )
+    /*
+        val targetWorkflowInstance = v(
+          a("jobUid", `string`, Required) +
+          a("other1", , `int`) +
+          a("other2", `string`, Optional),
+
+          noEdges
+        )
+
+     */
+
+
+    val targetWorkflowInstance = {
+      import targetGraph._
+
+//      Vertex(
+//        expectedAttributes = Attributes(List(
+//          TargetAttribute("jobUid", classOf[String], Required),
+//          TargetAttribute("other1", classOf[Int], Required),
+//          TargetAttribute("other2", classOf[String], Optional)
+//        )),
+//        expectedEdges = Edges(List.empty)
+//      )
+
+      v(
+        a("jobUid", classOf[String], Required) ::
+        a("jobName", classOf[Int], Required) ::
+        a("status", classOf[String], Required) :: Nil,
+
+        List.empty
+      )
+
+      v(
+        a("jobUid", classOf[String], Required) ::
+          a("jobName", classOf[Int], Required) ::
+          a("completedAt", classOf[String], Required) ::
+          a("status", classOf[String], Required) :: Nil,
+        List.empty
+      )
+
+
+
+    }
 
 
     val realWorkflowInstance = existingGraph.Vertex(
-      expectedAttributes = existingGraph.Attributes(
-        List(ExistingAttribute("jobUid", "Super"))
-      ),
-      expectedEdges = existingGraph.Edges(List.empty)
+      attributes = existingGraph.Attributes(List(
+        ExistingAttribute("jobUid", "Super"),
+        ExistingAttribute("other1", "One"),
+        ExistingAttribute("other3", "TooMuch"),
+      )),
+      edges = existingGraph.Edges(List.empty)
     )
 
     println(checkVertex(targetWorkflowInstance, realWorkflowInstance))
   }
 
+  def checkVertexStates(targetVertex: targetGraph.Vertex, existingVertex: existingGraph.Vertex): String = {
+
+  }
+
   def checkVertex(targetVertex: targetGraph.Vertex, existingVertex: existingGraph.Vertex): String = {
 
-    val target = targetVertex.expectedAttributes.attributes
+    val target = targetVertex.attributes.attributes
       .map(ta => (ta.name, ta)).toMap
 
-    val existing = existingVertex.expectedAttributes.attributes
+    val existing = existingVertex.attributes.attributes
       .map(ta => (ta.name, ta)).toMap
 
 
@@ -68,14 +127,7 @@ object Main {
 
       // Todo: Try extractors
       case (Some(target), Some(existing)) => {
-//        classOf[ev]
-
         if (!target.`type`.isInstance(existing.value)) {
-
-          val str = existing.asInstanceOf[String]
-
-    //        if (target.`type` != classOf[ev]) {
-//        if (!target.`type`.equals(existing.getClass)) {
           Left(s"Wrong class ${target.name}: ${target.`type`} != ${existing.value.getClass}")
         } else
           Right()
