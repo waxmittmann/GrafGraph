@@ -1,31 +1,93 @@
 package templatey
 
+import scala.collection.mutable
+
 object Main {
 
   class GraphFactory[T] {
 
     case class VertexStates(states: Vertex)
 
-    case class Edge(attributes: T)
+    case class Edge(attributes: Attributes = Attributes(), to: Vertex)
 
-    case class Edges(edges: List[Edge])
+    class Edges(edges: mutable.MutableList[Edge] = new mutable.MutableList[Edge]()) {
+      def getEdges = List(edges)
 
-    case class Attributes(attributes: Seq[T])
+      def insertEdge(edge: Edge): Edges = {
+        edges += edge
+        this
+      }
+
+      def copy: Edges = {
+        val lb = new mutable.MutableList[Edge]()
+        lb :+ edges
+        new Edges(lb)
+      }
+    }
+
+    case class Attributes(attributes: Seq[T] = Seq.empty)
 
     sealed trait GraphElement
 
-    case class Vertex(
-      attributes: Attributes,
-      edges: Edges
+    class Vertex(
+      val name: String,
+      val attributes: Attributes,
+      vEdges: Edges
+    ) {
+      class VertexBuilder() {
+        def appendEdge(edge: Edge): VertexBuilder = {
+          vEdges.insertEdge(edge)
+          this
+        }
+
+        def copy: Vertex = new Vertex(name, attributes, vEdges.copy)
+      }
+
+      def appendEdge(edge: Edge): VertexBuilder = {
+        vEdges.insertEdge(edge)
+        new VertexBuilder
+      }
+
+      def copy: Vertex = {
+        new Vertex(name, attributes, vEdges.copy)
+      }
+
+      def edges: Edges = vEdges.copy
+
+//      def e(edge: Edge): Vertex = {
+//        insertEdge(edge)
+//        this
+//      }
+    }
+
+    def e: Edges = new Edges(new mutable.MutableList[Edge]())
+
+    def v(
+      name: String,
+      attributes: Seq[T] = Seq.empty,
+//      edges: List[Edge]
+//      edges: List[Edge]
+      edges: Edges = new Edges()
+    ) = new Vertex(
+      name,
+      Attributes(attributes),
+//      new Edges(mutable.MutableList(edges.toArray:_*))
+      edges
     )
 
     def v(
+      name: String,
       attributes: Seq[T],
+      //      edges: List[Edge]
       edges: List[Edge]
-    ) = Vertex(
+    ) = new Vertex(
+      name,
       Attributes(attributes),
-      Edges(edges)
+        new Edges(mutable.MutableList(edges.toArray:_*))
     )
+
+    //    def e(edge: Edge): Edge = insertEdge(edge)
+
 
   }
 
@@ -49,18 +111,6 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    /*
-        val targetWorkflowInstance = v(
-          a("jobUid", `string`, Required) +
-          a("other1", , `int`) +
-          a("other2", `string`, Optional),
-
-          noEdges
-        )
-
-     */
-
-
     val targetWorkflowInstance = {
       import targetGraph._
 
@@ -73,42 +123,65 @@ object Main {
 //        expectedEdges = Edges(List.empty)
 //      )
 
-      v(
-        a("jobUid", classOf[String], Required) ::
-        a("jobName", classOf[Int], Required) ::
-        a("status", classOf[String], Required) :: Nil,
+      val workflowDefinition =
+        v(
+          "workflowDefinition",
+          a("definition", classOf[String], Required) :: Nil,
+          List.empty
+        )
 
-        List.empty
-      )
+      val workflowInstance =
+        v(
+          "workflowInstance",
+          a("jobUid", classOf[String], Required) ::
+          a("jobName", classOf[Int], Required) ::
+          a("status", classOf[String], Required) :: Nil,
+          e.insertEdge(Edge(Attributes(), workflowDefinition))
+        )
 
+      val artifact =
+        v(
+          name = "artifact",
+          a("key", classOf[String], Required) :: Nil,
+          edges = e.insertEdge(Edge(Attributes(), workflowDefinition))
+        )
+
+      // As example; notice we don't return the vertex itself, so user can't think it's copying. This could have a copy
+      // method though
+      val x: workflowInstance.VertexBuilder = workflowInstance.appendEdge(Edge(to = artifact))
+      // x.copy; allowed, get a vertex back TODO: should need name
+
+      
+
+
+      // Bs
       v(
+        "f",
         a("jobUid", classOf[String], Required) ::
           a("jobName", classOf[Int], Required) ::
           a("completedAt", classOf[String], Required) ::
           a("status", classOf[String], Required) :: Nil,
         List.empty
       )
-
-
-
     }
 
 
-    val realWorkflowInstance = existingGraph.Vertex(
+    val realWorkflowInstance = new existingGraph.Vertex(
+      name = "Boo",
       attributes = existingGraph.Attributes(List(
         ExistingAttribute("jobUid", "Super"),
         ExistingAttribute("other1", "One"),
         ExistingAttribute("other3", "TooMuch"),
       )),
-      edges = existingGraph.Edges(List.empty)
+      vEdges = new existingGraph.Edges()
     )
 
     println(checkVertex(targetWorkflowInstance, realWorkflowInstance))
   }
 
-  def checkVertexStates(targetVertex: targetGraph.Vertex, existingVertex: existingGraph.Vertex): String = {
-
-  }
+//  def checkVertexStates(targetVertex: targetGraph.Vertex, existingVertex: existingGraph.Vertex): String = {
+//
+//  }
 
   def checkVertex(targetVertex: targetGraph.Vertex, existingVertex: existingGraph.Vertex): String = {
 
