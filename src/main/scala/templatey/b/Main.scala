@@ -144,6 +144,14 @@ object Main {
 
 //    sealed trait Attribute
 
+//    sealed trait Ordinality
+//    case object ToOne extends Ordinality
+//    case object ToMany extends Ordinality
+
+//    sealed trait Requiredness
+//    case object Required extends Requiredness
+//    case object Optional extends Requiredness
+
     case class Vertex(
       name: String,
       versions: Seq[VertexVersion]
@@ -178,11 +186,14 @@ object Main {
     //    edges: Seq[Edge]
     //  )
 
-    sealed trait Edge
+    sealed trait Edge {
+      val optional: Boolean
+      val toMany: Boolean
+    }
 
-    case class OtherEdge(to: Vertex, attribute: Seq[A] = Seq.empty) extends Edge
+    case class OtherEdge(to: Vertex, optional: Boolean = false, toMany: Boolean = false, attribute: Seq[A] = Seq.empty) extends Edge
 
-    case class SelfEdge(attribute: Seq[A]) extends Edge
+    case class SelfEdge(attribute: Seq[A], optional: Boolean = false, toMany: Boolean = false) extends Edge
 
     //  def otherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty): Edge = OtherEdge(to, attribute)
 

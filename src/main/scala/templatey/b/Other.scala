@@ -2,7 +2,7 @@ package templatey.b
 
 import templatey.b.Main.Graph
 
-class Other {
+object Other {
 
   def main(args: Array[String]): Unit = {
     // Real
@@ -48,7 +48,7 @@ class Other {
       val workflowDefinition = Vertex(
         "workflowDefn",
         vv(
-          OtherEdge(artifactDefn) :: Nil,
+          OtherEdge(artifactDefn, toMany = true) :: Nil,
           Attr.String("uid") ::
             Attr.String("definition") :: Nil
         )
@@ -57,7 +57,7 @@ class Other {
       val workflowInstance = Vertex(
         "workflowInstance",
         vv(
-          OtherEdge(artifact) ::
+          OtherEdge(artifact, toMany = true) ::
           OtherEdge(workflowDefinition) ::
             Nil,
 
