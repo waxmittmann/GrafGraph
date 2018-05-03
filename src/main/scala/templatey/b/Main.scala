@@ -139,17 +139,33 @@ object Main {
   sealed trait Version
   sealed trait Attribute
 
+
+
   case class Vertex(
-    versions: Seq[VertexVersion],
-    latest: VertexVersion
+    name: String,
+    versions: Seq[VertexVersion]
   ) {
+    // Can I tag version to its vertex? like 'self.Version'?
     def get(version: Version): VertexVersion = ???
+
+    lazy val latest: Seq[VertexVersion] = versions.tail
   }
 
+  object Vertex {
+    def apply(name: String, inititalVersion: VertexVersion): Vertex =
+      Vertex(name, inititalVersion :: Nil)
+  }
+
+
   case class VertexVersion(
-    version: Version,
     allowedDefinitions: Seq[VertexDefinition]
-  )
+  ) {
+    val version: Version = new Version { }
+  }
+
+  object VertexVersion {
+    def apply(defn: VertexDefinition): VertexVersion = VertexVersion(Seq(defn))
+  }
 
   case class VertexDefinition(
     edges: Seq[Edge],
@@ -162,10 +178,42 @@ object Main {
 //  )
 
   sealed trait Edge
-  case class OtherEdge(to: Vertex)
-  case object SelfEdge
+  case class OtherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty) extends Edge
+  case class SelfEdge(attribute: Seq[Attribute]) extends Edge
+//  def otherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty): Edge = OtherEdge(to, attribute)
+
+
+  def v(name: String, version: VertexVersion) = Vertex(name, Seq(version))
+  def vv(defn: VertexDefinition) = VertexVersion(defn)
+  def vv(
+    edges: Seq[Edge],
+    attributes: Seq[Attribute]
+  ) = VertexVersion(VertexDefinition(edges, attributes))
 
   def main(args: Array[String]): Unit = {
+
+    val artifact = v(
+      "artifact",
+      vv(Nil, Nil)
+    )
+
+    val workflowDefinition = Vertex(
+      "workflowDefn",
+      vv(
+        Nil,
+        new Attribute {} :: Nil
+      )
+    )
+
+    val workflowInstance = Vertex(
+      "workflowInstance",
+      vv(
+        OtherEdge(workflowDefinition) :: Nil,
+        new Attribute {} :: Nil
+      )
+    )
+
+
 
   }
 
