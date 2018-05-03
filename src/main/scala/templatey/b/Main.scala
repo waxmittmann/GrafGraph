@@ -2,6 +2,8 @@ package templatey.b
 
 import scala.collection.mutable
 
+import com.sun.javafx.geom.Edge
+
 /*
   Ok, versioning + everything:
 
@@ -140,26 +142,30 @@ object Main {
 
   trait Graph[A] {
 
-//    sealed trait Version
+    //    sealed trait Version
 
-//    sealed trait Attribute
+    //    sealed trait Attribute
 
-//    sealed trait Ordinality
-//    case object ToOne extends Ordinality
-//    case object ToMany extends Ordinality
+    //    sealed trait Ordinality
+    //    case object ToOne extends Ordinality
+    //    case object ToMany extends Ordinality
 
-//    sealed trait Requiredness
-//    case object Required extends Requiredness
-//    case object Optional extends Requiredness
+    //    sealed trait Requiredness
+    //    case object Required extends Requiredness
+    //    case object Optional extends Requiredness
+
+    type GraphAttribute = A
+
+    val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
 
     case class Vertex(
       name: String,
       versions: Seq[VertexVersion]
     ) {
       // Can I tag version to its vertex? like 'self.Version'?
-//      def get(version: Version): VertexVersion = versions.find(_.version == version).get
+      //      def get(version: Version): VertexVersion = versions.find(_.version == version).get
 
-      lazy val latest: Seq[VertexVersion] = versions.tail
+      lazy val latest: VertexVersion = versions.last
     }
 
     object Vertex {
@@ -167,19 +173,30 @@ object Main {
         Vertex(name, inititalVersion :: Nil)
     }
 
+    class VertexDefinition private(
+      val edges: Seq[Edge],
+      val attributes: Seq[A]
+    )
+
+    object VertexDefinition {
+      def apply(
+        edges: Seq[Edge],
+        attributes: Seq[A]
+      ): VertexDefinition = {
+        new VertexDefinition(edges, GlobalAttributes ++ attributes)
+      }
+    }
 
     case class VertexVersion(
       allowedDefinitions: Seq[VertexDefinition]
-    )
+    ) {
+      def ::(vertexDefinition: VertexDefinition): VertexVersion = this.copy(vertexDefinition +: allowedDefinitions)
+    }
 
     object VertexVersion {
       def apply(defn: VertexDefinition): VertexVersion = VertexVersion(Seq(defn))
     }
 
-    case class VertexDefinition(
-      edges: Seq[Edge],
-      attributes: Seq[A]
-    )
 
     //
     //  class Vertex(
@@ -199,6 +216,7 @@ object Main {
 
 
     def v(name: String, version: VertexVersion) = Vertex(name, Seq(version))
+    def v(name: String, version: Seq[VertexVersion]) = Vertex(name, version)
 
     def vv(defn: VertexDefinition) = VertexVersion(defn)
 
@@ -206,39 +224,38 @@ object Main {
       edges: Seq[Edge],
       attributes: Seq[A]
     ) = VertexVersion(VertexDefinition(edges, attributes))
-  }
-
-  def main(args: Array[String]): Unit = {
-
-    // Abstract
-    {
-      val graph = new Graph[Unit] {}
-      import graph._
-
-      val artifact = v(
-        "artifact",
-        vv(Nil, Nil)
-      )
-
-      val workflowDefinition = Vertex(
-        "workflowDefn",
-        vv(
-          Nil,
-          () :: Nil
-        )
-      )
-
-      val workflowInstance = Vertex(
-        "workflowInstance",
-        vv(
-          OtherEdge(workflowDefinition) :: Nil,
-          () :: Nil
-        )
-      )
-    }
-
 
   }
-
-
 }
+
+/*
+    def main(args: Array[String]): Unit = {
+
+      // Abstract
+      {
+        val graph = new Graph[Unit] {}
+        import graph._
+
+        val artifact = v(
+          "artifact",
+          vv(Nil, Nil)
+        )
+
+        val workflowDefinition = Vertex(
+          "workflowDefn",
+          vv(
+            Nil,
+            () :: Nil
+          )
+        )
+
+        val workflowInstance = Vertex(
+          "workflowInstance",
+          vv(
+            OtherEdge(workflowDefinition) :: Nil,
+            () :: Nil
+          )
+        )
+      }
+
+ */
