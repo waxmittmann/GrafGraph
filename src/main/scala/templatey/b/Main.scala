@@ -136,83 +136,95 @@ object Main {
       case object SelfEdge
    */
 
-  sealed trait Version
-  sealed trait Attribute
 
 
+  trait Graph[A] {
 
-  case class Vertex(
-    name: String,
-    versions: Seq[VertexVersion]
-  ) {
-    // Can I tag version to its vertex? like 'self.Version'?
-    def get(version: Version): VertexVersion = ???
+//    sealed trait Version
 
-    lazy val latest: Seq[VertexVersion] = versions.tail
+//    sealed trait Attribute
+
+    case class Vertex(
+      name: String,
+      versions: Seq[VertexVersion]
+    ) {
+      // Can I tag version to its vertex? like 'self.Version'?
+//      def get(version: Version): VertexVersion = versions.find(_.version == version).get
+
+      lazy val latest: Seq[VertexVersion] = versions.tail
+    }
+
+    object Vertex {
+      def apply(name: String, inititalVersion: VertexVersion): Vertex =
+        Vertex(name, inititalVersion :: Nil)
+    }
+
+
+    case class VertexVersion(
+      allowedDefinitions: Seq[VertexDefinition]
+    )
+
+    object VertexVersion {
+      def apply(defn: VertexDefinition): VertexVersion = VertexVersion(Seq(defn))
+    }
+
+    case class VertexDefinition(
+      edges: Seq[Edge],
+      attributes: Seq[A]
+    )
+
+    //
+    //  class Vertex(
+    //    edges: Seq[Edge]
+    //  )
+
+    sealed trait Edge
+
+    case class OtherEdge(to: Vertex, attribute: Seq[A] = Seq.empty) extends Edge
+
+    case class SelfEdge(attribute: Seq[A]) extends Edge
+
+    //  def otherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty): Edge = OtherEdge(to, attribute)
+
+
+    def v(name: String, version: VertexVersion) = Vertex(name, Seq(version))
+
+    def vv(defn: VertexDefinition) = VertexVersion(defn)
+
+    def vv(
+      edges: Seq[Edge],
+      attributes: Seq[A]
+    ) = VertexVersion(VertexDefinition(edges, attributes))
   }
-
-  object Vertex {
-    def apply(name: String, inititalVersion: VertexVersion): Vertex =
-      Vertex(name, inititalVersion :: Nil)
-  }
-
-
-  case class VertexVersion(
-    allowedDefinitions: Seq[VertexDefinition]
-  ) {
-    val version: Version = new Version { }
-  }
-
-  object VertexVersion {
-    def apply(defn: VertexDefinition): VertexVersion = VertexVersion(Seq(defn))
-  }
-
-  case class VertexDefinition(
-    edges: Seq[Edge],
-    attributes: Seq[Attribute]
-  )
-
-//
-//  class Vertex(
-//    edges: Seq[Edge]
-//  )
-
-  sealed trait Edge
-  case class OtherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty) extends Edge
-  case class SelfEdge(attribute: Seq[Attribute]) extends Edge
-//  def otherEdge(to: Vertex, attribute: Seq[Attribute] = Seq.empty): Edge = OtherEdge(to, attribute)
-
-
-  def v(name: String, version: VertexVersion) = Vertex(name, Seq(version))
-  def vv(defn: VertexDefinition) = VertexVersion(defn)
-  def vv(
-    edges: Seq[Edge],
-    attributes: Seq[Attribute]
-  ) = VertexVersion(VertexDefinition(edges, attributes))
 
   def main(args: Array[String]): Unit = {
 
-    val artifact = v(
-      "artifact",
-      vv(Nil, Nil)
-    )
+    // Abstract
+    {
+      val graph = new Graph[Unit] {}
+      import graph._
 
-    val workflowDefinition = Vertex(
-      "workflowDefn",
-      vv(
-        Nil,
-        new Attribute {} :: Nil
+      val artifact = v(
+        "artifact",
+        vv(Nil, Nil)
       )
-    )
 
-    val workflowInstance = Vertex(
-      "workflowInstance",
-      vv(
-        OtherEdge(workflowDefinition) :: Nil,
-        new Attribute {} :: Nil
+      val workflowDefinition = Vertex(
+        "workflowDefn",
+        vv(
+          Nil,
+          () :: Nil
+        )
       )
-    )
 
+      val workflowInstance = Vertex(
+        "workflowInstance",
+        vv(
+          OtherEdge(workflowDefinition) :: Nil,
+          () :: Nil
+        )
+      )
+    }
 
 
   }
