@@ -41,7 +41,7 @@ object Lake {
       val artifact = v(
         "Artifact",
         vv(
-          OtherEdge(artifactDefn) ::
+          OtherEdge("definition", artifactDefn) ::
             Nil,
 
           Attr.Boolean("exists") :: // need to create early, to keep track of its uid; this will be pattern.
@@ -53,7 +53,7 @@ object Lake {
       val workflowDefinition = Vertex(
         "WorkflowDefn",
         vv(
-          OtherEdge(artifactDefn, toMany = true) :: Nil,
+          OtherEdge("artifactDefinition", artifactDefn, toMany = true) :: Nil,
             Attr.String("definition") :: Nil
         )
       )
@@ -61,8 +61,8 @@ object Lake {
       val workflowInstance = Vertex(
         "WorkflowInstance",
         vv(
-          OtherEdge(artifact, toMany = true) ::
-          OtherEdge(workflowDefinition) ::
+          OtherEdge("output", artifact, toMany = true) ::
+          OtherEdge("definition", workflowDefinition) ::
             Nil,
 
           Attr.String("jobUid") ::
@@ -70,8 +70,8 @@ object Lake {
             Nil
         ) ::
         vv(
-          OtherEdge(artifact, toMany = true) ::
-            OtherEdge(workflowDefinition) ::
+          OtherEdge("output", artifact, toMany = true) ::
+            OtherEdge("definition", workflowDefinition) ::
             Nil,
 
           Attr.String("jobUid") ::

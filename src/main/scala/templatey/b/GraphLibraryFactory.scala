@@ -37,27 +37,30 @@ object GraphLibraryFactory {
     // definitions.foldLeft(WriterImpl()) { case (wi, vert) => wi.write(writeDefinition(vert)) }
   }
 
+  private def uncapitalize(str: String) = str.head.toLower + str.tail
 
   def writeEdge(self: graph.Vertex, e: graph.Edge): String = {
     e match {
-      case graph.OtherEdge(to: graph.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Lake.Attribute]) => {
+      case graph.OtherEdge(name: String, to: graph.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Lake.Attribute]) => {
 
         // Ignore attribute for now
         // don't do optional; use toMany for that
 
         if (toMany) {
-          s"${to.name.head.toLower + to.name.tail}s: Seq[${to.name}],"
+//          s"${to.name.head.toLower + to.name.tail}s: Seq[${to.name}],"
+          s"${uncapitalize(name)}s: Seq[${to.name}],"
         } else {
-          s"${to.name.head.toLower + to.name.tail}: ${to.name},"
+//          s"${to.name.head.toLower + to.name.tail}: ${to.name},"
+          s"${uncapitalize(name)}: ${to.name},"
         }
 
       }
 
-      case graph.SelfEdge(attribute, optional, toMany) => {
+      case graph.SelfEdge(name, attribute, optional, toMany) => {
         if (toMany) {
-          s"${self.name.head.toLower + self.name.tail}s: Seq[${self.name}],"
+          s"${uncapitalize(name)}s: Seq[${self.name}],"
         } else {
-          s"${self.name.head.toLower + self.name.tail}: ${self.name},"
+          s"${uncapitalize(name)}: ${self.name},"
         }
 
       }
