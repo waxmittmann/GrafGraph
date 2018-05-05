@@ -146,6 +146,21 @@ object Lake {
         )
         .done
 
+//      val artifact =
+//        vertex("Artifact")
+//          .version()
+//              .defn("Placeholder")
+//                  .edge(OtherEdge("definition", artifactDefn))
+//                  .attr(boolean("exists", false))
+//                  .end
+//              .defn("Exists")
+//                  .edge(OtherEdge("definition", artifactDefn))
+//                  .attr(boolean("exists", true))
+//                  .end
+//              .done
+//          )
+//          .done
+
       val artifact = v(
         "Artifact",
         vv(
