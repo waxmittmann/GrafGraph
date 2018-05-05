@@ -1,3 +1,5 @@
+TODO: register workflows pre-use (so we don't have to full-text match every time)
+
 
   Ok, versioning + everything:
 
@@ -35,7 +37,7 @@
    This one we will when building program mean that we build it up with mutable references, all pointing to a vertex,
    and just add versions to that vertex when migrate is called.
 
-    ```
+```
     vertex referencesInitial {
       ...
       edgeTo initialFoo // will be any version OR will be latest version
@@ -77,9 +79,8 @@
   states, versions, instances
     each instance is an instance of a klazz
     each instance has multiple versions (incl. initial)
-      each version has multiple states (created, complete, ...)
+      each version has multiple states (created, complete)
       
-
     Could also:
     - retire versions (not gen source or allow)
     - create migration sets (sets of classes with a base version)
@@ -88,4 +89,4 @@
     - have behavior for failure to parse to compatible version (ignore, throw, log, ...)
     - some way of ensuring backward compatibility for minor versions, non-compatibility for major versions
     - have a migration action of migrating a node to a complex relationship, or vice versa (this will be hard)
-        eg: WorkflowDefn->DockerImage TO WorkflowDefn->WorkflowStep->DockerImage
+        eg: WorkflowDefn->DockerImage`` TO WorkflowDefn->WorkflowStep->DockerImage
