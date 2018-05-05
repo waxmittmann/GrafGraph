@@ -44,11 +44,29 @@ object Lake {
 //      val e: graph.VertexVersion = d |
 
       val e: graph.VertexVersion =
-//        (v >> OtherEdge("definition", ???) |) |
-        (vv > "a" >> OtherEdge("definition", ???) |) |
+        (vv > "a" >>
+          OtherEdge("definition", ???)) !
+          Attr.Int("a") |
 
+      val e: graph.VertexVersion =
+        (vv > "a" >>
+          OtherEdge("definition", ???) >>
+          OtherEdge("definition", ???)) !
+          Attr.Int("a") |
 
-//      val vva = vv("atr") >>
+      val e: graph.VertexVersion =
+        (vv > "a" >>
+          OtherEdge("definition", ???)) !
+          Attr.Int("a") >>
+          Attr.Int("a") |
+
+//      val a: graph.Builders.VertexVersionBuilder3 =
+//        vv > "a" >>
+//          OtherEdge("definition", ???) |
+//
+//      a.>>()
+
+      //      val vva = vv("atr") >>
 //        OtherEdge("definition", ???) >>
 //        OtherEdge("definition", ???) |
 //        Attr.Int("a") >>
@@ -72,6 +90,12 @@ object Lake {
           OtherEdge("definition", ???) |
           Attr.Int("a")).>>(Attr.Int("b")) |
 
+      val vvb: graph.VertexVersion =
+        (vv2("atr") >>
+          OtherEdge("definition", ???) >>
+          OtherEdge("definition", ???) |
+          Attr.Int("a")).>>(Attr.Int("b")) |
+
       //        Attr.Int("a") >>
 //        Attr.Int("b")
 
@@ -79,7 +103,9 @@ object Lake {
 
       val artifactDefn = v(
         "ArtifactDefn",
-        vv > "watr" >> OtherEdge("definition", artifactDefn) | Attr.Int("a") |
+        vv > "watr" >>
+          OtherEdge("definition", artifactDefn) |
+          Attr.Int("a") |
 
 
 
@@ -96,7 +122,7 @@ object Lake {
           "Placeholder",
           OtherEdge("definition", artifactDefn) :: Nil,
           boolean("exists", false) :: Nil // need to create early, to keep track of its uid; this will be pattern.
-        ) :b:
+        ) ::
         vv(
           "Exists",
           OtherEdge("definition", artifactDefn) :: Nil,

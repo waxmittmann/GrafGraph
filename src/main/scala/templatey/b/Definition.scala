@@ -84,9 +84,9 @@ object Definition {
       case class VertexVersionBuilder2(name: Option[String], edges: Seq[Edge]) {
         def >>(e: Edge): VertexVersionBuilder2 = this.copy(edges = e +: edges)
 
-        def | : VertexVersionBuilder3 = VertexVersionBuilder3(name, edges, Seq.empty)
+        def ! : VertexVersionBuilder3 = VertexVersionBuilder3(name, edges, Seq.empty)
 
-        def |(e: GraphAttribute) : VertexVersionBuilder3 = VertexVersionBuilder3(name, edges, Seq(e))
+        def !(e: GraphAttribute) : VertexVersionBuilder3 = VertexVersionBuilder3(name, edges, Seq(e))
       }
 
       class VertexVersionBuilder1() {
@@ -94,8 +94,8 @@ object Definition {
         def > : VertexVersionBuilder2 = VertexVersionBuilder2(None, Seq.empty)
       }
 
-//      def vv(name: String): VertexVersionBuilder2 = VertexVersionBuilder2(Some(name), Seq.empty)
-//      def vv: VertexVersionBuilder2 = VertexVersionBuilder2(None, Seq.empty)
+      def vv2(name: String): VertexVersionBuilder2 = VertexVersionBuilder2(Some(name), Seq.empty)
+      def vv2: VertexVersionBuilder2 = VertexVersionBuilder2(None, Seq.empty)
 
 
       def vv: VertexVersionBuilder1 = new VertexVersionBuilder1()
