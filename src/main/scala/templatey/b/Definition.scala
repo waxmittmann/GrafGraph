@@ -23,6 +23,7 @@ object Definition {
     }
 
     class VertexDefinition private(
+      val name: Option[String],
       val edges: Seq[Edge],
       val attributes: Seq[A]
     )
@@ -33,7 +34,7 @@ object Definition {
         edges: Seq[Edge],
         attributes: Seq[A]
       ): VertexDefinition = {
-        new VertexDefinition(edges, GlobalAttributes ++ attributes)
+        new VertexDefinition(name, edges, GlobalAttributes ++ attributes)
       }
     }
 
@@ -68,6 +69,54 @@ object Definition {
       toMany: Boolean = false
     ) extends Edge
 
+    object Builders2 {
+
+      // Version builder
+
+      case class VertexBuilder1(name: String, versions: Seq[VertexVersion]) {
+        def version(version: VertexVersion): VertexBuilder1 = this.copy(versions = version +: versions)
+
+        def done: Vertex = Vertex(name, versions)
+      }
+
+      def vertex(name: String): VertexBuilder1 = VertexBuilder1(name, Seq.empty)
+
+      // VertexVersion builder
+      case class VertexVersionBuilder1(
+        versions: Seq[VertexDefinition]
+      ) {
+        def defn(version: VertexDefinition): VertexVersionBuilder1 = this.copy(version +: versions)
+
+        def done = VertexVersion(versions)
+      }
+
+      def vertexVersion(): VertexVersionBuilder1 = VertexVersionBuilder1(Seq.empty)
+
+      // VertexDefn builder
+      case class VertexDefnBuilder2(name: Option[String], edges: Seq[Edge], attr: Seq[GraphAttribute]) {
+        def attr(a: GraphAttribute) = VertexDefnBuilder2(name, edges, a +: attr)
+
+        def end = VertexDefinition(name, edges, attr)
+      }
+
+      case class VertexDefnBuilder1(name: Option[String], edges: Seq[Edge]) {
+        def edge(e: Edge): VertexDefnBuilder1 = this.copy(edges = e +: edges)
+
+        def attr(a: GraphAttribute) = VertexDefnBuilder2(name, edges, Seq.empty)
+      }
+
+      def vertexDefn(name: String): VertexDefnBuilder1 = {
+        VertexDefnBuilder1(Some(name), Seq.empty)
+      }
+
+      def vertexDefn(): VertexDefnBuilder1 = {
+        VertexDefnBuilder1(None, Seq.empty)
+      }
+
+
+
+    }
+
 
     object Builders {
       def v(name: String, version: VertexVersion) = Vertex(name, Seq(version))
@@ -99,7 +148,10 @@ object Definition {
 
 
       def vv: VertexVersionBuilder1 = new VertexVersionBuilder1()
-//      def vv: VertexVersionBuilder1 = new VertexVersionBuilder1()
+
+
+
+      //      def vv: VertexVersionBuilder1 = new VertexVersionBuilder1()
 
 //      def vv(defn: VertexDefinition) = VertexVersion(defn)
 //
