@@ -9,17 +9,17 @@ object Scratch {
 
   case class Step2(name: String) {
 
-    def x(thing: String): Step3 = Step3(name, Some(thing))
+    def x(thing: String): Step4 = Step4(name, Some(thing), Seq.empty)
 
-    def y: Step3 = Step3(name, None)
+    def y: Step4 = Step4(name, None, Seq.empty)
 
   }
 
-  case class Step3(name: String, other: Option[String]) {
-    def x(thing: String): Step4 = Step4(name, other, Seq(thing))
-
-    def y: Step5 = Step5(name, other, Seq.empty)
-  }
+//  case class Step3(name: String, other: Option[String]) {
+//    def x(thing: String): Step4 = Step4(name, other, Seq(thing))
+//
+//    def y: Step5 = Step5(name, other, Seq.empty)
+//  }
 
   case class Step4(name: String, other: Option[String], seq: Seq[String]) {
     def x(thing: String): Step4 = this.copy(seq = thing +: seq)
