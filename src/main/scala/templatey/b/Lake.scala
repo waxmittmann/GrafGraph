@@ -161,6 +161,28 @@ object Lake {
 //          )
 //          .done
 
+      {
+        import graph.Builders3._
+
+        val a1: graph.Vertex =
+          vertex("v")
+            .version
+              .defn(Some("d1"))
+                .edge(OtherEdge("definition", artifactDefn))
+                .attribute(boolean("exists", false))
+              .done
+              .defn(Some("d2"))
+                .edge(OtherEdge("definition", artifactDefn))
+                .attribute(boolean("exists", false))
+              .done
+            .done
+          .done
+
+
+
+
+      }
+
       val artifact = v(
         "Artifact",
         vv(

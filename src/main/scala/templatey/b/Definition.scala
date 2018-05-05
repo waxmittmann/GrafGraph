@@ -69,6 +69,57 @@ object Definition {
       toMany: Boolean = false
     ) extends Edge
 
+    object Builders3 {
+
+
+      def vertex(name: String): VertexBuilder = VertexBuilder(name, Seq.empty)
+
+      case class VertexBuilder(name: String, versions: Seq[VertexVersion]) {
+        def version: VersionBuilder = IncompleteVersionBuilder(this)
+
+        def done: Vertex = Vertex(name, versions)
+      }
+
+      sealed trait VersionBuilder {
+        def defn(name: Option[String]): DefnBuilder
+
+        def withDefn(version: VertexDefinition): CompleteVersionBuilder
+      }
+
+      case class IncompleteVersionBuilder(parent: VertexBuilder) extends VersionBuilder {
+        def defn(name: Option[String]) = DefnBuilder(this, name, Seq.empty, Seq.empty)
+
+        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+          CompleteVersionBuilder(parent, Seq(defn))
+      }
+
+      case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexDefinition]) extends VersionBuilder  {
+        def defn(name: Option[String]) = DefnBuilder(this, name, Seq.empty, Seq.empty)
+
+        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+          CompleteVersionBuilder(parent, Seq(defn))
+
+        def done: VertexBuilder = parent.copy(versions = VertexVersion(definitions) +: parent.versions)
+      }
+
+      case class DefnBuilder(
+        parent: VersionBuilder,
+        name: Option[String],
+        edges: Seq[Edge],
+        attributes: Seq[GraphAttribute]
+      ) {
+        def edge(edge: Edge): DefnBuilder = this.copy(edges = edge +: edges)
+
+        def attribute(attribute: GraphAttribute): DefnBuilder = this.copy(attributes = attribute +: attributes)
+
+        def defn(name: Option[String]) = parent.withDefn(VertexDefinition(name, edges, attributes)).defn(name)
+
+        def done: CompleteVersionBuilder = parent.withDefn(VertexDefinition(name, edges, attributes))
+      }
+
+    }
+
+
     object Builders2 {
 
       // Version builder
@@ -90,7 +141,7 @@ object Definition {
         def done = VertexVersion(versions)
       }
 
-      def vertexVersion(): VertexVersionBuilder1 = VertexVersionBuilder1(Seq.empty)
+//      def vertexVersion(): VertexVersionBuilder1 = VertexVersionBuilder1(Seq.empty)
 
       // VertexDefn builder
       case class VertexDefnBuilder2(name: Option[String], edges: Seq[Edge], attr: Seq[GraphAttribute]) {
