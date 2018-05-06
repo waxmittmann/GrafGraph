@@ -73,21 +73,21 @@ object GraphLibraryFactory {
     index: Option[Int] = None
   ): String = {
     s"""
-       |case class ${vertex.name}(
+       |case class ${vertex.name}${index.fold("")(s => s"_$s")}(
        |  ${allowedDefinition.attributes.map(writeAttribute).mkString("\n")}
        |  ${allowedDefinition.edges.map(e => writeEdge(vertex, e)).mkString("\n")}
-      |) ${index.fold(" extends GraphElement")(s => s"_$s extends GraphElement, ${vertex.name}")}
+      |) ${index.fold("extends GraphElement")(s => s"extends GraphElement, ${vertex.name}")}
      """.stripMargin
   }
 
-  def attrType(attr: Lake.Attribute) = attr match {
+  def attrType(attr: Lake.Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
     case Attr.String(_, _) => "String"
     case Attr.UID(_, _) => "String"
     case Attr.Boolean(_, _) => "Boolean"
   }
 
-  def attrValue(attr: Lake.Attribute) = attr match {
+  def attrValue(attr: Lake.Attribute): String = attr match {
     case Attr.Int(_, Some(value)) => s"= $value"
     case Attr.String(_, Some(value)) => s"""= "$value""""
     case Attr.UID(_, Some(value)) => s"""= "$value""""
@@ -116,7 +116,7 @@ object GraphLibraryFactory {
      */
 
 
-    if (vertex.latest.allowedDefinitions.length == 1) {
+    if (vertex.latest.allowedDefinitions.lengthCompare(1) == 0) {
       val defn = vertex.latest.allowedDefinitions.head
       writeAllowedDefinition(vertex, defn)
     } else {
