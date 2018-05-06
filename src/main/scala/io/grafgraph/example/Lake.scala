@@ -1,6 +1,7 @@
 package io.grafgraph.example
 
-import io.grafgraph.definition.Definition.Graph
+import io.grafgraph.definition.GraphDefinition
+import io.grafgraph.example.Lake.graph
 
 object Lake {
   sealed trait Attribute {
@@ -19,21 +20,20 @@ object Lake {
   }
   import Attr.boolean
 
-  type OtherGraph = Graph[Attribute]
+  type OtherGraph = GraphDefinition[Attribute]
 
-  val graph: OtherGraph = new Graph[Attribute] {
+  val graph: OtherGraph = new GraphDefinition[Attribute] {
     override val GlobalAttributes: Seq[GraphAttribute] =
       Seq(Attr.UID("uid"))
   }
 
-  import Lake.graph.Builders._
+  import Lake.graph.builders._
 
-
-    val artifactDefn =
+    val artifactDefn: graph.Vertex =
       vertex("ArtifactDefn")
       .version
-      .state
-      .attribute(Attr.String("label"))
+        .state
+          .attribute(Attr.String("label"))
       .done
 
     val artifact =
