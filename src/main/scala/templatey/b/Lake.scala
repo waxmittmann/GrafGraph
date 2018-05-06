@@ -170,12 +170,16 @@ object Lake {
               .defn(Some("d1"))
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
-              .done
               .defn(Some("d2"))
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
-              .done
-            .done
+            .version
+              .defn(Some("d1"))
+                .edge(OtherEdge("definition", artifactDefn))
+                .attribute(boolean("exists", false))
+              .defn(Some("d2"))
+                .edge(OtherEdge("definition", artifactDefn))
+                .attribute(boolean("exists", false))
           .done
 
 

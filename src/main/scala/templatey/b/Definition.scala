@@ -81,6 +81,10 @@ object Definition {
       }
 
       sealed trait VersionBuilder {
+        val parent: VertexBuilder
+
+        def definitions: Seq[VertexDefinition]
+
         def defn(name: Option[String]): DefnBuilder
 
         def withDefn(version: VertexDefinition): CompleteVersionBuilder
@@ -91,6 +95,8 @@ object Definition {
 
         override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
           CompleteVersionBuilder(parent, Seq(defn))
+
+        override def definitions: Seq[VertexDefinition] = Seq.empty
       }
 
       case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexDefinition]) extends VersionBuilder  {
@@ -99,7 +105,11 @@ object Definition {
         override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
           CompleteVersionBuilder(parent, Seq(defn))
 
-        def done: VertexBuilder = parent.copy(versions = VertexVersion(definitions) +: parent.versions)
+//        def version: VersionBuilder = {
+//          IncompleteVersionBuilder(parent.copy(versions = VertexVersion(definitions) +: parent.versions))
+//        }
+
+//        def done: VertexBuilder = parent.copy(versions = VertexVersion(definitions) +: parent.versions)
       }
 
       case class DefnBuilder(
@@ -112,11 +122,28 @@ object Definition {
 
         def attribute(attribute: GraphAttribute): DefnBuilder = this.copy(attributes = attribute +: attributes)
 
-        def defn(name: Option[String]) = parent.withDefn(VertexDefinition(name, edges, attributes)).defn(name)
+        def defn(name: Option[String]): DefnBuilder = parent.withDefn(VertexDefinition(name, edges, attributes)).defn(name)
 
-        def done: CompleteVersionBuilder = parent.withDefn(VertexDefinition(name, edges, attributes))
+        def version: VersionBuilder = {
+          val grandparent = parent.parent
+
+          val thisDefn = VertexDefinition(name, edges, attributes)
+          val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
+
+          IncompleteVersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions))
+        }
+
+        def done: Vertex = {
+          val grandparent = parent.parent
+
+          val thisDefn = VertexDefinition(name, edges, attributes)
+          val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
+
+          grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done
+        }
+
+        //        def done: CompleteVersionBuilder = parent.withDefn(VertexDefinition(name, edges, attributes))
       }
-
     }
 
 
