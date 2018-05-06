@@ -1,6 +1,6 @@
 package io.grafgraph.example
 
-import io.grafgraph.definition.GraphDefinition
+import io.grafgraph.definition.{Builders, GraphDefinition}
 import io.grafgraph.example.Lake.graph
 
 object Lake {
@@ -27,8 +27,13 @@ object Lake {
       Seq(Attr.UID("uid"))
   }
 
-  import Lake.graph.builders._
 
+  val builders: Builders[Attribute] = Builders(graph)
+  import builders._
+
+//  import Lake.graph.builders._
+
+//    val artifactDefn: builders.graph.Vertex =
     val artifactDefn: graph.Vertex =
       vertex("ArtifactDefn")
       .version

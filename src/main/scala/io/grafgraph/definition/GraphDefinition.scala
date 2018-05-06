@@ -68,5 +68,5 @@ trait GraphDefinition[A] {
     toMany: Boolean = false
   ) extends Edge
 
-  val builders: Builders[A] = Builders[A](this)
+//  val builders: Builders[A] = Builders[A](this)
 }
