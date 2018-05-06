@@ -1,7 +1,48 @@
 package io.grafgraph.definition
 
+import cats.data.NonEmptyList
+//import io.grafgraph.definition.GraphDefinition.{Edge, VertexState}
+
+//trait GraphDefinition[A] {
+////  type GraphAttribute = A
+////
+////  val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
+////
+////  object VertexState {
+////    def apply(
+////      name: Option[String],
+////      edges: Seq[Edge],
+////      attributes: Seq[A]
+////    ): VertexState = {
+////      new VertexState(name, edges, GlobalAttributes ++ attributes)
+////    }
+////  }
+//
+//  type Vertex = GraphDefinition.Vertex[A]
+//  type VertexState = GraphDefinition.VertexState[A]
+//  type VertexVersion = GraphDefinition.VertexVersion[A]
+//  type Edge = GraphDefinition.Edge
+//  type OtherEdge = GraphDefinition.OtherEdge[A]
+//  type SelfEdge = GraphDefinition.SelfEdge[A]
+//
+//}
+
+
 trait GraphDefinition[A] {
+
   type GraphAttribute = A
+
+  val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
+
+  object VertexState {
+    def apply(
+      name: Option[String],
+      edges: Seq[Edge],
+      attributes: Seq[A]
+    ): VertexState = {
+      new VertexState(name, edges, GlobalAttributes ++ attributes)
+    }
+  }
 
   // type DTS = DepType#Something
 
@@ -14,9 +55,7 @@ trait GraphDefinition[A] {
 
 //  val x: graph.Vertex = graph.graph.Vertex
 
-  val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
-
-//  Graph#Vertex
+//    Graph#Vertex
 
   case class Vertex(
     name: String,
@@ -40,24 +79,15 @@ trait GraphDefinition[A] {
     attributes: Seq[A]
   )
 
-  object VertexState {
-    def apply(
-      name: Option[String],
-      edges: Seq[Edge],
-      attributes: Seq[A]
-    ): VertexState = {
-      new VertexState(name, edges, GlobalAttributes ++ attributes)
-    }
-  }
-
+  // todo: just make it a nel
   case class VertexVersion(
-    allowedDefinitions: Seq[VertexState]
+    allowedDefinitions: NonEmptyList[VertexState]
   ) {
-    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition +: allowedDefinitions)
+    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition :: allowedDefinitions)
   }
 
   object VertexVersion {
-    def apply(defn: VertexState): VertexVersion = VertexVersion(Seq(defn))
+    def apply(defn: VertexState): VertexVersion = VertexVersion(NonEmptyList.of(defn))
   }
 
   sealed trait Edge {

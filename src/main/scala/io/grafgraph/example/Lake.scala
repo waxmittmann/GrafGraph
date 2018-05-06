@@ -1,30 +1,38 @@
 package io.grafgraph.example
 
 import io.grafdefinition.WithBuilders
+import io.grafgraph.definition.GraphDefinition
+import io.grafgraph.example.Lake.OtherGraph
 
-object Lake {
-  sealed trait Attribute {
-    val name: String
-  }
+sealed trait Attribute {
+  val name: String
+}
 
-  object Attr {
-    // Value probably to become test
-    case class Int(name: java.lang.String, value: Option[scala.Int] = None) extends Attribute
-    case class String(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
-    case class UID(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
-    case class Boolean(name: java.lang.String, value: Option[java.lang.Boolean] = None) extends Attribute
+// Todo: keep here?
+object Attr {
+  // Value probably to become test
+  case class Int(name: java.lang.String, value: Option[scala.Int] = None) extends Attribute
+  case class String(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
+  case class UID(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
+  case class Boolean(name: java.lang.String, value: Option[java.lang.Boolean] = None) extends Attribute
 
-    def boolean(name: java.lang.String, value: java.lang.Boolean): Attribute = Boolean(name, Some(value))
-    def boolean(name: java.lang.String): Attribute = Boolean(name, None)
-  }
-  import Attr.boolean
+  def boolean(name: java.lang.String, value: java.lang.Boolean): Attribute = Boolean(name, Some(value))
+  def boolean(name: java.lang.String): Attribute = Boolean(name, None)
+}
+import Attr.boolean
+
+object Lake extends GraphDefinition[Attribute] {
 
   type OtherGraph = WithBuilders[Attribute]
 
   val graph: OtherGraph = new WithBuilders[Attribute] {
+//    type Vertex = OtherGraph#Vertex
+
     override val GlobalAttributes: Seq[GraphAttribute] =
       Seq(Attr.UID("uid"))
   }
+
+//  def make()
 
 
 //  val builders: Builders[Attribute] = Builders(graph)
@@ -32,6 +40,9 @@ object Lake {
   import graph._
 
 //  import Lake.graph.builders._
+
+
+  val x: Lake.Vertex = Boo.make(graph)
 
 //    val artifactDefn: builders.graph.Vertex =
     val artifactDefn: graph.Vertex =

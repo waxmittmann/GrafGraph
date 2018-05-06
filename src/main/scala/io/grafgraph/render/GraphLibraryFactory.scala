@@ -1,7 +1,7 @@
 package io.grafgraph.render
 
-import io.grafgraph.example.Lake.{Attr, graph}
-import io.grafgraph.example.Lake
+import io.grafgraph.example.Lake.graph
+import io.grafgraph.example.{Attr, Attribute, Lake}
 
 object GraphLibraryFactory {
 
@@ -41,7 +41,7 @@ object GraphLibraryFactory {
 
   def writeEdge(self: graph.Vertex, e: graph.Edge): String = {
     e match {
-      case graph.OtherEdge(name: String, to: graph.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Lake.Attribute]) => {
+      case graph.OtherEdge(name: String, to: graph.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
 
         // Ignore attribute for now
         // don't do optional; use toMany for that
@@ -77,14 +77,14 @@ object GraphLibraryFactory {
      """.stripMargin
   }
 
-  def attrType(attr: Lake.Attribute): String = attr match {
+  def attrType(attr: Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
     case Attr.String(_, _) => "String"
     case Attr.UID(_, _) => "String"
     case Attr.Boolean(_, _) => "Boolean"
   }
 
-  def attrValue(attr: Lake.Attribute): String = attr match {
+  def attrValue(attr: Attribute): String = attr match {
     case Attr.Int(_, Some(value)) => s"= $value"
     case Attr.String(_, Some(value)) => s"""= "$value""""
     case Attr.UID(_, Some(value)) => s"""= "$value""""
@@ -94,24 +94,24 @@ object GraphLibraryFactory {
 
 
 
-  def writeAttribute(attr: Lake.Attribute): String = {
+  def writeAttribute(attr: Attribute): String = {
     s"${attr.name}: ${attrType(attr)}${attrValue(attr)},"
   }
 
-  def writeAttributeToTrait(attr: Lake.Attribute): String = {
+  def writeAttributeToTrait(attr: Attribute): String = {
     s"val ${attr.name}: ${attrType(attr)}${attrValue(attr)}"
   }
 
   def writeDefinition(vertex: Lake.graph.Vertex): String = {
 
-    if (vertex.latest.allowedDefinitions.lengthCompare(1) == 0) {
+    if (vertex.latest.allowedDefinitions.length == 1) {
       val defn = vertex.latest.allowedDefinitions.head
       writeAllowedDefinition(vertex, defn)
     } else {
       s"sealed trait ${vertex.name}" +
         vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: graph.VertexState, index: Int) =>
           writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name.getOrElse(index.toString)))
-        }.mkString("\n\n")
+        }.toList.mkString("\n\n")
     }
 
   }

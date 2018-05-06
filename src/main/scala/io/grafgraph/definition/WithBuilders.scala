@@ -1,5 +1,6 @@
 package io.grafdefinition
 
+import cats.data.NonEmptyList
 import io.grafgraph.definition.GraphDefinition
 
 // Don't love 'WithBuilders' extending 'GraphDefinition' but it works, and at least this way I can keep apart the
@@ -69,8 +70,8 @@ trait WithBuilders[A] extends GraphDefinition[A] {
     def version: VersionBuilder = {
       val grandparent = parent.parent
 
-      val thisDefn = VertexState(name, edges, attributes)
-      val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
+      val thisDefn: VertexState = VertexState(name, edges, attributes)
+      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
       IncompleteVersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions))
     }
@@ -79,7 +80,7 @@ trait WithBuilders[A] extends GraphDefinition[A] {
       val grandparent = parent.parent
 
       val thisDefn = VertexState(name, edges, attributes)
-      val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
+      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
       grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done
     }
