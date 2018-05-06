@@ -3,7 +3,20 @@ package io.grafgraph.definition
 trait GraphDefinition[A] {
   type GraphAttribute = A
 
+  // type DTS = DepType#Something
+
+//  val builder: Builders[A] = new Builders[A](this)
+
+
+//  val v: Vertex = builder.graph.Vertex
+
+
+
+//  val x: graph.Vertex = graph.graph.Vertex
+
   val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
+
+//  Graph#Vertex
 
   case class Vertex(
     name: String,
