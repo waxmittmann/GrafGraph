@@ -85,25 +85,30 @@ object Definition {
 
         def definitions: Seq[VertexDefinition]
 
-        def defn(name: Option[String]): DefnBuilder
+        def defn(name: String) = DefnBuilder(this, Some(name), Seq.empty, Seq.empty)
+        def defn = DefnBuilder(this, None, Seq.empty, Seq.empty)
 
-        def withDefn(version: VertexDefinition): CompleteVersionBuilder
+//        def withDefn(version: VertexDefinition): CompleteVersionBuilder
+        def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+          CompleteVersionBuilder(parent, Seq(defn))
       }
 
       case class IncompleteVersionBuilder(parent: VertexBuilder) extends VersionBuilder {
-        def defn(name: Option[String]) = DefnBuilder(this, name, Seq.empty, Seq.empty)
+//        def defn(name: String) = DefnBuilder(this, Some(name), Seq.empty, Seq.empty)
+//        def defn = DefnBuilder(this, None, Seq.empty, Seq.empty)
 
-        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
-          CompleteVersionBuilder(parent, Seq(defn))
+//        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+//          CompleteVersionBuilder(parent, Seq(defn))
 
         override def definitions: Seq[VertexDefinition] = Seq.empty
       }
 
       case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexDefinition]) extends VersionBuilder  {
-        def defn(name: Option[String]) = DefnBuilder(this, name, Seq.empty, Seq.empty)
+//        def defn(name: String) = DefnBuilder(this, Some(name), Seq.empty, Seq.empty)
+//        def defn = DefnBuilder(this, None, Seq.empty, Seq.empty)
 
-        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
-          CompleteVersionBuilder(parent, Seq(defn))
+//        override def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+//          CompleteVersionBuilder(parent, Seq(defn))
 
 //        def version: VersionBuilder = {
 //          IncompleteVersionBuilder(parent.copy(versions = VertexVersion(definitions) +: parent.versions))
@@ -122,7 +127,9 @@ object Definition {
 
         def attribute(attribute: GraphAttribute): DefnBuilder = this.copy(attributes = attribute +: attributes)
 
-        def defn(name: Option[String]): DefnBuilder = parent.withDefn(VertexDefinition(name, edges, attributes)).defn(name)
+//        def defn(name: Option[String]): DefnBuilder = parent.withDefn(VertexDefinition(name, edges, attributes)).defn(name)
+        def defn(name: String): DefnBuilder = parent.withDefn(VertexDefinition(Some(name), edges, attributes)).defn(name)
+        def defn: DefnBuilder = parent.withDefn(VertexDefinition(name, edges, attributes)).defn
 
         def version: VersionBuilder = {
           val grandparent = parent.parent

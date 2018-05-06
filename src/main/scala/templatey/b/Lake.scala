@@ -167,22 +167,20 @@ object Lake {
         val a1: graph.Vertex =
           vertex("v")
             .version
-              .defn(Some("d1"))
+              .defn("d1")
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
-              .defn(Some("d2"))
+              .defn("d2")
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
             .version
-              .defn(Some("d1"))
+              .defn("d1")
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
-              .defn(Some("d2"))
+              .defn
                 .edge(OtherEdge("definition", artifactDefn))
                 .attribute(boolean("exists", false))
           .done
-
-
 
 
       }
