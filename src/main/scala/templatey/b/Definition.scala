@@ -22,30 +22,30 @@ object Definition {
         Vertex(name, inititalVersion :: Nil)
     }
 
-    class VertexDefinition private(
+    class VertexState private(
       val name: Option[String],
       val edges: Seq[Edge],
       val attributes: Seq[A]
     )
 
-    object VertexDefinition {
+    object VertexState {
       def apply(
         name: Option[String],
         edges: Seq[Edge],
         attributes: Seq[A]
-      ): VertexDefinition = {
-        new VertexDefinition(name, edges, GlobalAttributes ++ attributes)
+      ): VertexState = {
+        new VertexState(name, edges, GlobalAttributes ++ attributes)
       }
     }
 
     case class VertexVersion(
-      allowedDefinitions: Seq[VertexDefinition]
+      allowedDefinitions: Seq[VertexState]
     ) {
-      def ::(vertexDefinition: VertexDefinition): VertexVersion = this.copy(vertexDefinition +: allowedDefinitions)
+      def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition +: allowedDefinitions)
     }
 
     object VertexVersion {
-      def apply(defn: VertexDefinition): VertexVersion = VertexVersion(Seq(defn))
+      def apply(defn: VertexState): VertexVersion = VertexVersion(Seq(defn))
     }
 
     sealed trait Edge {
@@ -69,7 +69,7 @@ object Definition {
       toMany: Boolean = false
     ) extends Edge
 
-    object Builders3 {
+    object Builders {
       def vertex(name: String): VertexBuilder = VertexBuilder(name, Seq.empty)
 
       case class VertexBuilder(name: String, versions: Seq[VertexVersion]) {
@@ -81,41 +81,41 @@ object Definition {
       sealed trait VersionBuilder {
         val parent: VertexBuilder
 
-        def definitions: Seq[VertexDefinition]
+        def definitions: Seq[VertexState]
 
-        def defn(name: String) = DefnBuilder(this, Some(name), Seq.empty, Seq.empty)
-        def defn = DefnBuilder(this, None, Seq.empty, Seq.empty)
+        def state(name: String) = StateBuilder(this, Some(name), Seq.empty, Seq.empty)
+        def state = StateBuilder(this, None, Seq.empty, Seq.empty)
 
-        def withDefn(defn: VertexDefinition): CompleteVersionBuilder =
+        def withState(defn: VertexState): CompleteVersionBuilder =
           CompleteVersionBuilder(parent, Seq(defn))
       }
 
       case class IncompleteVersionBuilder(parent: VertexBuilder) extends VersionBuilder {
-        override def definitions: Seq[VertexDefinition] = Seq.empty
+        override def definitions: Seq[VertexState] = Seq.empty
       }
 
-      case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexDefinition]) extends VersionBuilder
-      case class DefnBuilder(
+      case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexState]) extends VersionBuilder
+      case class StateBuilder(
         parent: VersionBuilder,
         name: Option[String],
         edges: Seq[Edge],
         attributes: Seq[GraphAttribute]
       ) {
-        def otherEdge(name: String, to: Vertex, attributes: Seq[GraphAttribute] = Seq.empty, toMany: Boolean = false, optional: Boolean = false): DefnBuilder =
+        def otherEdge(name: String, to: Vertex, attributes: Seq[GraphAttribute] = Seq.empty, toMany: Boolean = false, optional: Boolean = false): StateBuilder =
           this.copy(edges = OtherEdge(name, to, toMany, optional, attributes) +: edges)
 
-        def selfEdge(name: String, attributes: Seq[GraphAttribute] = Seq.empty, toMany: Boolean = false, optional: Boolean = false): DefnBuilder =
+        def selfEdge(name: String, attributes: Seq[GraphAttribute] = Seq.empty, toMany: Boolean = false, optional: Boolean = false): StateBuilder =
           this.copy(edges = SelfEdge(name, attributes, toMany, optional) +: edges)
 
-        def attribute(attribute: GraphAttribute): DefnBuilder = this.copy(attributes = attribute +: attributes)
+        def attribute(attribute: GraphAttribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
-        def defn(name: String): DefnBuilder = parent.withDefn(VertexDefinition(Some(name), edges, attributes)).defn(name)
-        def defn: DefnBuilder = parent.withDefn(VertexDefinition(name, edges, attributes)).defn
+        def state(name: String): StateBuilder = parent.withState(VertexState(Some(name), edges, attributes)).state(name)
+        def state: StateBuilder = parent.withState(VertexState(name, edges, attributes)).state
 
         def version: VersionBuilder = {
           val grandparent = parent.parent
 
-          val thisDefn = VertexDefinition(name, edges, attributes)
+          val thisDefn = VertexState(name, edges, attributes)
           val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
 
           IncompleteVersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions))
@@ -124,7 +124,7 @@ object Definition {
         def done: Vertex = {
           val grandparent = parent.parent
 
-          val thisDefn = VertexDefinition(name, edges, attributes)
+          val thisDefn = VertexState(name, edges, attributes)
           val thisVertexVersion = VertexVersion(thisDefn +: parent.definitions)
 
           grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done

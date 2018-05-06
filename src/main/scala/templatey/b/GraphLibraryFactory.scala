@@ -18,7 +18,7 @@ object GraphLibraryFactory {
     // graph.GlobalAttributes
 
     val graphElement = s"""sealed trait GraphElement {
-       | ${graph.GlobalAttributes.map(writeAttributeToTrait).mkString("\n")}
+       |${graph.GlobalAttributes.map(writeAttributeToTrait).map(s => s"  $s\n").mkString}
        |}
      """.stripMargin
 
@@ -45,12 +45,9 @@ object GraphLibraryFactory {
 
         // Ignore attribute for now
         // don't do optional; use toMany for that
-
         if (toMany) {
-//          s"${to.name.head.toLower + to.name.tail}s: Seq[${to.name}],"
           s"${uncapitalize(name)}s: Seq[${to.name}],"
         } else {
-//          s"${to.name.head.toLower + to.name.tail}: ${to.name},"
           s"${uncapitalize(name)}: ${to.name},"
         }
 
@@ -69,14 +66,14 @@ object GraphLibraryFactory {
 
   def writeAllowedDefinition(
     vertex: graph.Vertex,
-    allowedDefinition: graph.VertexDefinition,
-    index: Option[Int] = None
+    allowedDefinition: graph.VertexState,
+    index: Option[String] = None
   ): String = {
     s"""
        |case class ${vertex.name}${index.fold("")(s => s"_$s")}(
-       |  ${allowedDefinition.attributes.map(writeAttribute).mkString("\n")}
-       |  ${allowedDefinition.edges.map(e => writeEdge(vertex, e)).mkString("\n")}
-      |) ${index.fold("extends GraphElement")(s => s"extends GraphElement, ${vertex.name}")}
+       |${allowedDefinition.attributes.map(writeAttribute).map(s => s"  $s\n").mkString}
+       |${allowedDefinition.edges.map(e => writeEdge(vertex, e)).map(s => s"  $s\n").mkString}
+      |) ${index.fold("extends GraphElement")(_ => s"extends GraphElement with ${vertex.name}")}
      """.stripMargin
   }
 
@@ -106,23 +103,14 @@ object GraphLibraryFactory {
   }
 
   def writeDefinition(vertex: Lake.graph.Vertex): String = {
-    /*
-        case class WorkflowDefn(
-          uid: String,
-          definition: String,
-          artifacts: Seq[Artifact],
-        )
-
-     */
-
 
     if (vertex.latest.allowedDefinitions.lengthCompare(1) == 0) {
       val defn = vertex.latest.allowedDefinitions.head
       writeAllowedDefinition(vertex, defn)
     } else {
       s"sealed trait ${vertex.name}" +
-        vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: graph.VertexDefinition, index: Int) =>
-          writeAllowedDefinition(vertex, allowedDefinition, Some(index))
+        vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: graph.VertexState, index: Int) =>
+          writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name.getOrElse(index.toString)))
         }.mkString("\n\n")
     }
 
