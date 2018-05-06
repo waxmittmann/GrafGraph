@@ -1,6 +1,6 @@
 package io.grafgraph.render
 
-import io.grafgraph.example.Lake.graph
+//import io.grafgraph.example.Lake.graph
 import io.grafgraph.example.{Attr, Attribute, Lake}
 
 object GraphLibraryFactory {
@@ -13,12 +13,12 @@ object GraphLibraryFactory {
     def write(str: String): Writer = WriterImpl(str +: cur)
   }
 
-  def write(writer: Writer)(definitions: Seq[Lake.graph.Vertex]): Writer = {
+  def write(writer: Writer)(definitions: Seq[Lake.Vertex]): Writer = {
     // Create trait that everything will belong to, with these as vars (or empty)
     // graph.GlobalAttributes
 
     val graphElement = s"""sealed trait GraphElement {
-       |${graph.GlobalAttributes.map(writeAttributeToTrait).map(s => s"  $s\n").mkString}
+       |${Lake.GlobalAttributes.map(writeAttributeToTrait).map(s => s"  $s\n").mkString}
        |}
      """.stripMargin
 
@@ -32,16 +32,16 @@ object GraphLibraryFactory {
     result.write("}")
   }
 
-  def write(definitions: Seq[Lake.graph.Vertex]): WriterImpl = {
+  def write(definitions: Seq[Lake.Vertex]): WriterImpl = {
    write(WriterImpl())(definitions).asInstanceOf[WriterImpl]
     // definitions.foldLeft(WriterImpl()) { case (wi, vert) => wi.write(writeDefinition(vert)) }
   }
 
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
-  def writeEdge(self: graph.Vertex, e: graph.Edge): String = {
+  def writeEdge(self: Lake.Vertex, e: Lake.Edge): String = {
     e match {
-      case graph.OtherEdge(name: String, to: graph.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
+      case Lake.OtherEdge(name: String, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
 
         // Ignore attribute for now
         // don't do optional; use toMany for that
@@ -53,7 +53,7 @@ object GraphLibraryFactory {
 
       }
 
-      case graph.SelfEdge(name, attribute, optional, toMany) => {
+      case Lake.SelfEdge(name, attribute, optional, toMany) => {
         if (toMany) {
           s"${uncapitalize(name)}s: Seq[${self.name}],"
         } else {
@@ -65,8 +65,8 @@ object GraphLibraryFactory {
   }
 
   def writeAllowedDefinition(
-    vertex: graph.Vertex,
-    allowedDefinition: graph.VertexState,
+    vertex: Lake.Vertex,
+    allowedDefinition: Lake.VertexState,
     index: Option[String] = None
   ): String = {
     s"""
@@ -102,14 +102,14 @@ object GraphLibraryFactory {
     s"val ${attr.name}: ${attrType(attr)}${attrValue(attr)}"
   }
 
-  def writeDefinition(vertex: Lake.graph.Vertex): String = {
+  def writeDefinition(vertex: Lake.Vertex): String = {
 
     if (vertex.latest.allowedDefinitions.length == 1) {
       val defn = vertex.latest.allowedDefinitions.head
       writeAllowedDefinition(vertex, defn)
     } else {
       s"sealed trait ${vertex.name}" +
-        vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: graph.VertexState, index: Int) =>
+        vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: Lake.VertexState, index: Int) =>
           writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name.getOrElse(index.toString)))
         }.toList.mkString("\n\n")
     }
