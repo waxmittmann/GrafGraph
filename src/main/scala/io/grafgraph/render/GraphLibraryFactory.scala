@@ -1,8 +1,11 @@
 package io.grafgraph.render
 
 //import io.grafgraph.example.Lake.graph
+import io.grafgraph.definition.GraphDefinition
 import io.grafgraph.example.{Attr, Attribute, Lake}
 
+// Couldn't use type projection because I want to match on some case classes, and it won't let me based on the type
+// projection, nor on a `type X = Y#Z` style thing.
 object GraphLibraryFactory {
 
   sealed trait Writer {
@@ -40,7 +43,9 @@ object GraphLibraryFactory {
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
   def writeEdge(self: Lake.Vertex, e: Lake.Edge): String = {
+//  def writeEdge(self: GraphDefinition[Attribute]#Vertex, e: GraphDefinition[Attribute]#Edge): String = {
     e match {
+        // Hmm ok, so here I need a concrete instance
       case Lake.OtherEdge(name: String, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
 
         // Ignore attribute for now
@@ -66,7 +71,9 @@ object GraphLibraryFactory {
 
   def writeAllowedDefinition(
     vertex: Lake.Vertex,
+//    vertex: GraphDefinition[Attribute]#Vertex,
     allowedDefinition: Lake.VertexState,
+//    allowedDefinition: GraphDefinition[Attribute]#VertexState,
     index: Option[String] = None
   ): String = {
     s"""

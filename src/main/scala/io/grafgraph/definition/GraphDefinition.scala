@@ -1,32 +1,6 @@
 package io.grafgraph.definition
 
 import cats.data.NonEmptyList
-//import io.grafgraph.definition.GraphDefinition.{Edge, VertexState}
-
-//trait GraphDefinition[A] {
-////  type GraphAttribute = A
-////
-////  val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
-////
-////  object VertexState {
-////    def apply(
-////      name: Option[String],
-////      edges: Seq[Edge],
-////      attributes: Seq[A]
-////    ): VertexState = {
-////      new VertexState(name, edges, GlobalAttributes ++ attributes)
-////    }
-////  }
-//
-//  type Vertex = GraphDefinition.Vertex[A]
-//  type VertexState = GraphDefinition.VertexState[A]
-//  type VertexVersion = GraphDefinition.VertexVersion[A]
-//  type Edge = GraphDefinition.Edge
-//  type OtherEdge = GraphDefinition.OtherEdge[A]
-//  type SelfEdge = GraphDefinition.SelfEdge[A]
-//
-//}
-
 
 trait GraphDefinition[A] {
 
@@ -43,19 +17,6 @@ trait GraphDefinition[A] {
       new VertexState(name, edges, GlobalAttributes ++ attributes)
     }
   }
-
-  // type DTS = DepType#Something
-
-//  val builder: Builders[A] = new Builders[A](this)
-
-
-//  val v: Vertex = builder.graph.Vertex
-
-
-
-//  val x: graph.Vertex = graph.graph.Vertex
-
-//    Graph#Vertex
 
   case class Vertex(
     name: String,
