@@ -1,6 +1,6 @@
-package templatey.b
+package io.grafgraph.example
 
-import templatey.b.Definition.Graph
+import io.grafgraph.definition.Definition.Graph
 
 object Lake {
   sealed trait Attribute {
@@ -26,7 +26,7 @@ object Lake {
       Seq(Attr.UID("uid"))
   }
 
-  import templatey.b.Lake.graph.Builders._
+  import Lake.graph.Builders._
 
 
     val artifactDefn =

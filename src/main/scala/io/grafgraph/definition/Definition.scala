@@ -1,4 +1,4 @@
-package templatey.b
+package io.grafgraph.definition
 
 object Definition {
 

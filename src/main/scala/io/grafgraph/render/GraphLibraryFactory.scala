@@ -1,7 +1,7 @@
-package templatey.b
+package io.grafgraph.render
 
-//import templatey.b.Lake.Attr.{Boolean, Int, String, UID}
-import templatey.b.Lake._
+import io.grafgraph.example.Lake.{Attr, graph}
+import io.grafgraph.example.Lake
 
 object GraphLibraryFactory {
 

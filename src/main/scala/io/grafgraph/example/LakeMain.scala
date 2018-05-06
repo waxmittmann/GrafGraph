@@ -1,6 +1,7 @@
-package templatey.b
+package io.grafgraph.example
 
-import Lake._
+import io.grafgraph.example.Lake._
+import io.grafgraph.render.GraphLibraryFactory
 
 object LakeMain {
   def main(args: Array[String]): Unit = {
