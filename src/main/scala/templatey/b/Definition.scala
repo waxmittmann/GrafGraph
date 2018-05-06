@@ -22,7 +22,8 @@ object Definition {
         Vertex(name, inititalVersion :: Nil)
     }
 
-    class VertexState private(
+    // todo: case class ok?
+    case class VertexState private(
       val name: Option[String],
       val edges: Seq[Edge],
       val attributes: Seq[A]
@@ -109,8 +110,8 @@ object Definition {
 
         def attribute(attribute: GraphAttribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
-        def state(name: String): StateBuilder = parent.withState(VertexState(Some(name), edges, attributes)).state(name)
-        def state: StateBuilder = parent.withState(VertexState(name, edges, attributes)).state
+        def state(newName: String): StateBuilder = parent.withState(VertexState(name, edges, attributes)).state(newName)
+        def state: StateBuilder = parent.withState(VertexState(None, edges, attributes)).state
 
         def version: VersionBuilder = {
           val grandparent = parent.parent
