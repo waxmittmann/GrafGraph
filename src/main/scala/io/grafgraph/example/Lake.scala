@@ -21,38 +21,21 @@ object Attr {
 }
 import Attr.boolean
 
-object Lake extends GraphDefinition[Attribute] {
+object Lake extends WithBuilders[Attribute] {
+
+  override val GlobalAttributes: Seq[GraphAttribute] =
+    Seq(Attr.UID("uid"))
 
   type OtherGraph = WithBuilders[Attribute]
 
-  val graph: OtherGraph = new WithBuilders[Attribute] {
-//    type Vertex = OtherGraph#Vertex
-
-    override val GlobalAttributes: Seq[GraphAttribute] =
-      Seq(Attr.UID("uid"))
-  }
-
-//  def make()
-
-
-//  val builders: Builders[Attribute] = Builders(graph)
-//  import builders._
-  import graph._
-
-//  import Lake.graph.builders._
-
-
-  val x: Lake.Vertex = Boo.make(graph)
-
-//    val artifactDefn: builders.graph.Vertex =
-    val artifactDefn: graph.Vertex =
-      graph.vertex("ArtifactDefn")
+  val artifactDefn: Vertex =
+      vertex("ArtifactDefn")
       .version
         .state
           .attribute(Attr.String("label"))
       .done
 
-    val artifact =
+    val artifact: Lake.Vertex =
       vertex("Artifact")
       .version
         .state("Placeholder")
@@ -63,7 +46,7 @@ object Lake extends GraphDefinition[Attribute] {
           .attribute(boolean("exists", true))
       .done
 
-    val workflowDefinition =
+    val workflowDefinition: Lake.Vertex =
       vertex("WorkflowDefn")
       .version
       .state
@@ -71,7 +54,7 @@ object Lake extends GraphDefinition[Attribute] {
       .attribute(Attr.String("definition"))
       .done
 
-    val workflowInstance =
+    val workflowInstance: Lake.Vertex =
       vertex("WorkflowInstance")
       .version
         .state("Running")

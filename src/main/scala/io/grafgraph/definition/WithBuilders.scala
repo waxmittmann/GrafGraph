@@ -8,17 +8,12 @@ import io.grafgraph.definition.GraphDefinition
 
 //case class Builders[A](graph: GraphDefinition[A]) {
 trait WithBuilders[A] extends GraphDefinition[A] {
-//  val graph: GraphDefinition[A]
-//case class Builders[A](graph: GraphDefinition[A]) {
-
-//  import _
 
   def vertex(name: String): VertexBuilder = VertexBuilder(name, Seq.empty)
 
   case class VertexBuilder(name: String, versions: Seq[VertexVersion]) {
     def version: VersionBuilder = IncompleteVersionBuilder(this)
 
-//    def done: Vertex = Vertex(name, versions)
     def done: Vertex = Vertex(name, versions)
   }
 
