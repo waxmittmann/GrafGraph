@@ -8,18 +8,16 @@ trait GraphDefinition[A] {
 
   val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
 
-  object VertexState {
-    def apply(
-      name: Option[String],
-      edges: Seq[Edge],
-      attributes: Seq[A]
-    ): VertexState = {
-      new VertexState(name, edges, GlobalAttributes ++ attributes)
-    }
-  }
+  // Todo: Honor clazz
+  case class Clazz(
+    name: String,
+    edges: Seq[Edge],
+    attributes: Seq[A]
+  )
 
   case class Vertex(
     name: String,
+    clazz: Option[Clazz], // Rules: cannot be self, cannot be anything that causes a circular dependency
     versions: Seq[VertexVersion]
   ) {
     // Can I tag version to its vertex? like 'self.Version'?
@@ -29,8 +27,18 @@ trait GraphDefinition[A] {
   }
 
   object Vertex {
-    def apply(name: String, inititalVersion: VertexVersion): Vertex =
-      Vertex(name, inititalVersion :: Nil)
+    def apply(name: String, clazz: Option[Clazz], inititalVersion: VertexVersion): Vertex =
+      Vertex(name, clazz, inititalVersion :: Nil)
+  }
+
+  object VertexState {
+    def apply(
+      name: Option[String],
+      edges: Seq[Edge],
+      attributes: Seq[A]
+    ): VertexState = {
+      new VertexState(name, edges, GlobalAttributes ++ attributes)
+    }
   }
 
   // todo: case class ok?

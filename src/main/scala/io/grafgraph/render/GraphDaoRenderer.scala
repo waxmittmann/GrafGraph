@@ -6,7 +6,7 @@ import io.grafgraph.example.{Attr, Attribute, Lake}
 
 // Couldn't use type projection because I want to match on some case classes, and it won't let me based on the type
 // projection, nor on a `type X = Y#Z` style thing.
-object GraphLibraryFactory {
+object GraphDaoRenderer {
 
   sealed trait Writer {
     def write(str: String): Writer

@@ -28,7 +28,10 @@ object Lake extends WithBuilders[Attribute] {
 
   type OtherGraph = WithBuilders[Attribute]
 
+  val artifactClazzDefn: Clazz = Clazz("Artifact", Seq.empty, Seq.empty)
+
   val artifactDefn: Vertex =
+//    (v("ArtifactDefn") extendz artifactClazzDefn)
       vertex("ArtifactDefn")
       .version
         .state
@@ -36,7 +39,8 @@ object Lake extends WithBuilders[Attribute] {
       .done
 
     val artifact: Lake.Vertex =
-      vertex("Artifact")
+//      vertex("Artifact")
+      (v("WorkflowArtifact") extendz artifactClazzDefn)
       .version
         .state("Placeholder")
           .otherEdge("definition", artifactDefn)

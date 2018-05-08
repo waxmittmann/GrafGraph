@@ -9,31 +9,40 @@ import io.grafgraph.definition.GraphDefinition
 //case class Builders[A](graph: GraphDefinition[A]) {
 trait WithBuilders[A] extends GraphDefinition[A] {
 
-  def vertex(name: String): VertexBuilder = VertexBuilder(name, Seq.empty)
+//  def clazz(name: String): ClazzBuilder1 = ClazzBuilder1(
+//
+//  )
 
-  case class VertexBuilder(name: String, versions: Seq[VertexVersion]) {
-    def version: VersionBuilder = IncompleteVersionBuilder(this)
+  def vertex(name: String): VertexBuilder2 = VertexBuilder2(
+    name,
+    None,
+    Seq.empty
+  )
 
-    def done: Vertex = Vertex(name, versions)
+  def v(name: String): VertexBuilder1 = new VertexBuilder1(name)
+
+  class VertexBuilder1(name: String) {
+    def extendz(clazz: Clazz): VertexBuilder2 = VertexBuilder2(name, Some(clazz), Seq.empty)
   }
 
-  sealed trait VersionBuilder {
-    val parent: VertexBuilder
+  case class VertexBuilder2(
+    name: String,
+    clazz: Option[Clazz],
+    versions: Seq[VertexVersion] = Seq.empty
+  ) {
+    def version: VersionBuilder = VersionBuilder(this, Seq.empty)
 
-    def definitions: Seq[VertexState]
+    def done: Vertex = Vertex(name, clazz, versions)
+  }
+  case class VersionBuilder(parent: VertexBuilder2, definitions: Seq[VertexState]) {
 
     def state(name: String) = StateBuilder(this, Some(name), Seq.empty, Seq.empty)
     def state = StateBuilder(this, None, Seq.empty, Seq.empty)
 
-    def withState(defn: VertexState): CompleteVersionBuilder =
-      CompleteVersionBuilder(parent, Seq(defn))
+    def withState(defn: VertexState): VersionBuilder =
+      this.copy(definitions = defn +: definitions)
   }
 
-  case class IncompleteVersionBuilder(parent: VertexBuilder) extends VersionBuilder {
-    override def definitions: Seq[VertexState] = Seq.empty
-  }
-
-  case class CompleteVersionBuilder(parent: VertexBuilder, definitions: Seq[VertexState]) extends VersionBuilder
   case class StateBuilder(
     parent: VersionBuilder,
     name: Option[String],
@@ -59,7 +68,7 @@ trait WithBuilders[A] extends GraphDefinition[A] {
 
     def attribute(attribute: GraphAttribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
-    def state(newName: String): StateBuilder = parent.withState(VertexState(name, edges, attributes)).state(newName)
+    def state(newName: String): StateBuilder = parent.copy().withState(VertexState(name, edges, attributes)).state(newName)
     def state: StateBuilder = parent.withState(VertexState(None, edges, attributes)).state
 
     def version: VersionBuilder = {
@@ -68,7 +77,7 @@ trait WithBuilders[A] extends GraphDefinition[A] {
       val thisDefn: VertexState = VertexState(name, edges, attributes)
       val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
-      IncompleteVersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions))
+      VersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions), Seq.empty)
     }
 
     def done: Vertex = {
