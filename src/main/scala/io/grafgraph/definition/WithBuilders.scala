@@ -13,6 +13,10 @@ trait WithBuilders[A] extends GraphDefinition[A] {
 //
 //  )
 
+
+  val allVertices: List[Vertex] // Not great :(
+  val allClazzez: List[Clazz] // Not great :(
+
   def vertex(name: String): VertexBuilder2 = VertexBuilder2(
     name,
     None,

@@ -2,7 +2,6 @@ package io.grafgraph.example
 
 import io.grafdefinition.WithBuilders
 import io.grafgraph.definition.GraphDefinition
-import io.grafgraph.example.Lake.OtherGraph
 
 sealed trait Attribute {
   val name: String
@@ -26,7 +25,7 @@ object Lake extends WithBuilders[Attribute] {
   override val GlobalAttributes: Seq[GraphAttribute] =
     Seq(Attr.UID("uid"))
 
-  type OtherGraph = WithBuilders[Attribute]
+//  type OtherGraph = WithBuilders[Attribute]
 
   val artifactClazzDefn: Clazz = Clazz("Artifact", Seq.empty, Seq.empty)
 
@@ -72,4 +71,11 @@ object Lake extends WithBuilders[Attribute] {
           .attribute(Attr.String("jobUid"))
           .attribute(Attr.String("status"))
       .done
+
+  // Not great
+  val allVertices: List[Lake.Vertex] =
+    artifactDefn :: artifact :: workflowDefinition :: workflowInstance :: Nil
+
+  val allClazzez: List[Lake.Clazz] =
+    artifactClazzDefn :: Nil
 }
