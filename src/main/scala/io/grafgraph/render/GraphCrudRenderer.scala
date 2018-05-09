@@ -6,6 +6,10 @@ import java.io
 
 object GraphCrudRenderer {
 
+  /*
+  import java.util.UUID
+   */
+
   def attrType(attr: Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
     case Attr.String(_, _) => "String"
@@ -21,50 +25,52 @@ object GraphCrudRenderer {
     case _ => ""
   }
 
-  def renderAttribute(attr: Attribute): String = {
-    s"val ${attr.name}: ${attrType(attr)}${attrValue(attr)},"
+  def renderAttribute(prefix: String)(attr: Attribute): String = {
+    s"$prefix${attr.name}: ${attrType(attr)}${attrValue(attr)}"
   }
 
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
-  def renderEdge(selfName: String)(e: WithBuilders[Attribute]#Edge): String = indent(2)({
+  def renderEdge(prefix: String)(selfName: String)(e: WithBuilders[Attribute]#Edge): String = indent(2)({
     //  def writeEdge(self: GraphDefinition[Attribute]#Vertex, e: GraphDefinition[Attribute]#Edge): String = {
-    e match {
+    val r = e match {
       // Hmm ok, so here I need a concrete instance
       case Lake.OtherEdge(name: String, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
         // Ignore attribute for now
         // don't do optional; use toMany for that
         if (toMany) {
-          s"val ${uncapitalize(name)}s: Seq[${to.name}]"
+          s"${uncapitalize(name)}s: Seq[${to.name}]"
         } else {
-          s"val ${uncapitalize(name)}: ${to.name}]"
+          s"${uncapitalize(name)}: ${to.name}"
         }
 
       }
 
       case Lake.SelfEdge(name, attribute, optional, toMany) => {
         if (toMany) {
-          s"val ${uncapitalize(name)}s: Seq[${selfName}]"
+          s"${uncapitalize(name)}s: Seq[$selfName]"
         } else {
-          s"val ${uncapitalize(name)}: ${selfName}"
+          s"${uncapitalize(name)}: $selfName"
         }
 
       }
     }
+
+    s"$prefix$r"
   })
 
   def renderClazz(clazz: WithBuilders[Attribute]#Clazz): String = indent(2)({
     s"""
       |sealed trait ${clazz.name} {
-      |${indent(2)(clazz.attributes.map(renderAttribute).mkString("\n"))}
-      |${indent(2)(clazz.edges.map(renderEdge(clazz.name)).mkString("\n"))}
+      |${indent(2)(clazz.attributes.map(renderAttribute("val")).mkString(",\n"))}
+      |${indent(2)(clazz.edges.map(renderEdge("val")(clazz.name)).mkString(",\n"))}
       |}
     """.stripMargin
   })
 
   def renderState(
-    vertex: WithBuilders[Attribute]#Vertex
-  )(
+    index: Int,
+    vertex: WithBuilders[Attribute]#Vertex,
     state: WithBuilders[Attribute]#VertexState
   ): String = indent(2) {
 //    val interfaces: Seq[String] = vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
@@ -74,34 +80,59 @@ object GraphCrudRenderer {
       vertex.name :: Nil
     )//vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
 
-    s"""
-       |case class ${state.name.getOrElse("BAD!")} implements ${interfaces.head} ${interfaces.tail.map(i => s" with $i").mkString(",")} {
-       |${indent(2)(state.attributes.map(renderAttribute).mkString("\n"))}
-       |${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString("\n"))}
-       |}
-     """.stripMargin
+    val attrs = state.attributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
 
+    val extendsPart = s"extends ${interfaces.head} ${interfaces.tail.map(i => s" with $i").mkString(",")}"
+    s"""
+       |case class ${state.name.getOrElse(s"State_$index")}(
+       |
+       |${indent(2)(attrs.mkString(",\n"))}
+       |
+       |) $extendsPart
+     """.stripMargin
+/*
+${indent(2)(state.attributes.map(renderAttribute).mkString(",\n"))}
+${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
+
+ */
   }
 
 
   def renderVersion(vertex: WithBuilders[Attribute]#Vertex, last: WithBuilders[Attribute]#VertexVersion): String =
     s"""
-       |${indent(2)(last.allowedDefinitions.map(renderState(vertex)).toList.mkString("\n"))}
+       |${indent(2)(last.allowedDefinitions.zipWithIndex.map { case (state, index) => renderState(index, vertex, state) }.toList.mkString("\n"))}
      """.stripMargin
 
   def renderVertex(vertex: WithBuilders[Attribute]#Vertex): String = indent(2)({
     s"""
-       |sealed trait ${vertex.name} {
-       |${indent(2)(renderVersion(vertex, vertex.versions.head))}
+       |sealed trait ${vertex.name}
+       |
+       |object ${vertex.name} {
+       |
+       |${indent(4)(renderVersion(vertex, vertex.versions.head))}
+       |
        |}
     """.stripMargin
   })
 
+  // Todo: Make all this configurable
   def render(graph: WithBuilders[Attribute]): String = {
+    val packageName = "io.testgraph"
+    val imports = Seq[String]("import java.util.UUID")
+
     //${renderMeta(graph.meta)}
     s"""
+       |package $packageName
+       |
+       |${imports.map(i => s"import $i").mkString("\n")}
+       |
        |object Graph {
-       |  $${renderMeta(graph.meta)} \\ Not implemented
+       |  sealed trait CreateReadUpdate
+       |  case class ReadUid(uid: UUID) extends CreateReadUpdate
+       |  case class ReadQuery(query: String) extends CreateReadUpdate
+       |  case class New[A](newA: A) extends CreateReadUpdate
+       |
+       |  // $${renderMeta(graph.meta)} // Not implemented
        |${indent(2)(graph.allClazzez.map(renderClazz).mkString("\n"))}
        |${indent(2)(graph.allVertices.map(renderVertex).mkString("\n"))}
        |}

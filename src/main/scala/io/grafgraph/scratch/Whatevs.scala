@@ -1,4 +1,4 @@
-package io.grafgraph.example
+package io.grafgraph.scratch
 
 object Graph {
 
