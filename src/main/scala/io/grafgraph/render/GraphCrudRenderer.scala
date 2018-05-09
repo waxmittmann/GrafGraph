@@ -75,9 +75,9 @@ object GraphCrudRenderer {
   ): String = indent(2) {
 //    val interfaces: Seq[String] = vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
     val interfaces: Seq[String] = vertex.clazz.map { c =>
-      c.name :: vertex.name :: s"VertexNew[${vertex.name}]" :: Nil
+      c.name :: vertex.name :: s"New" :: Nil
     }.getOrElse(
-      vertex.name :: Nil
+      vertex.name :: s"New" :: Nil
     )//vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
 
     val attrs = state.attributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
@@ -89,8 +89,9 @@ object GraphCrudRenderer {
     }
 
 //    val extendsPart = s"extends ${interfaces.head} with ${interfaces.tail.map(i => s" with $i").mkString}"
+//case class ${state.name.getOrElse(s"State_$index")}(
     s"""
-       |case class ${state.name.getOrElse(s"State_$index")}(
+       |case class ${state.name.getOrElse(if (index == 0) "Initial" else s"State_$index")}(
        |
        |${indent(2)(attrs.mkString(",\n"))}
        |
@@ -107,8 +108,9 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
   def renderVersion(vertex: WithBuilders[Attribute]#Vertex, last: WithBuilders[Attribute]#VertexVersion): String =
     s"""
        |
-       |  case class ByUid(uid: UUID) extends VertexByUid
-       |  case class ByQuery(query: String) extends VertexByQuery
+       |  case class ByUid(uid: UUID) extends VertexByUid with ${vertex.name}
+       |  case class ByQuery(query: String) extends VertexByQuery with ${vertex.name}
+       |  sealed trait New extends VertexNew[${vertex.name}]
        |
        |${indent(2)(last.states.zipWithIndex.map { case (state, index) =>
       renderState(index, vertex, state)
@@ -122,6 +124,8 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
        |object ${vertex.name} {
        |
        |${indent(4)(renderVersion(vertex, vertex.versions.head))}
+       |
+       |  def create(new${uncapitalize(vertex.name)}: New): Unit = ???
        |
        |}
     """.stripMargin
