@@ -50,9 +50,9 @@ trait GraphDefinition[A] {
 
   // todo: just make it a nel
   case class VertexVersion(
-    allowedDefinitions: NonEmptyList[VertexState]
+    states: NonEmptyList[VertexState]
   ) {
-    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition :: allowedDefinitions)
+    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition :: states)
   }
 
   object VertexVersion {

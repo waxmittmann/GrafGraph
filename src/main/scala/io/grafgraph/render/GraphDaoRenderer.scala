@@ -111,12 +111,12 @@ object GraphDaoRenderer {
 
   def writeDefinition(vertex: Lake.Vertex): String = {
 
-    if (vertex.latest.allowedDefinitions.length == 1) {
-      val defn = vertex.latest.allowedDefinitions.head
+    if (vertex.latest.states.length == 1) {
+      val defn = vertex.latest.states.head
       writeAllowedDefinition(vertex, defn)
     } else {
       s"sealed trait ${vertex.name}" +
-        vertex.latest.allowedDefinitions.zipWithIndex.map { case (allowedDefinition: Lake.VertexState, index: Int) =>
+        vertex.latest.states.zipWithIndex.map { case (allowedDefinition: Lake.VertexState, index: Int) =>
           writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name.getOrElse(index.toString)))
         }.toList.mkString("\n\n")
     }

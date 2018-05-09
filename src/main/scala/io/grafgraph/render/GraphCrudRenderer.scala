@@ -75,14 +75,20 @@ object GraphCrudRenderer {
   ): String = indent(2) {
 //    val interfaces: Seq[String] = vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
     val interfaces: Seq[String] = vertex.clazz.map { c =>
-      c.name :: vertex.name :: Nil
+      c.name :: vertex.name :: s"VertexNew[${vertex.name}]" :: Nil
     }.getOrElse(
       vertex.name :: Nil
     )//vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
 
     val attrs = state.attributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
 
-    val extendsPart = s"extends ${interfaces.head} ${interfaces.tail.map(i => s" with $i").mkString(",")}"
+    val extendsPart = interfaces match {
+//      case (ls: List[String]) => s"extends ${ls.tail.map(i => s" with $i").mkString}"
+      case (ls: List[String]) => s"extends ${ls.mkString(" with ")}"
+      case Nil => ""
+    }
+
+//    val extendsPart = s"extends ${interfaces.head} with ${interfaces.tail.map(i => s" with $i").mkString}"
     s"""
        |case class ${state.name.getOrElse(s"State_$index")}(
        |
@@ -100,7 +106,13 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
 
   def renderVersion(vertex: WithBuilders[Attribute]#Vertex, last: WithBuilders[Attribute]#VertexVersion): String =
     s"""
-       |${indent(2)(last.allowedDefinitions.zipWithIndex.map { case (state, index) => renderState(index, vertex, state) }.toList.mkString("\n"))}
+       |
+       |  case class ByUid(uid: UUID) extends VertexByUid
+       |  case class ByQuery(query: String) extends VertexByQuery
+       |
+       |${indent(2)(last.states.zipWithIndex.map { case (state, index) =>
+      renderState(index, vertex, state)
+    }.toList.mkString("\n"))}
      """.stripMargin
 
   def renderVertex(vertex: WithBuilders[Attribute]#Vertex): String = indent(2)({
@@ -118,7 +130,7 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
   // Todo: Make all this configurable
   def render(graph: WithBuilders[Attribute]): String = {
     val packageName = "io.testgraph"
-    val imports = Seq[String]("import java.util.UUID")
+    val imports = Seq[String]("java.util.UUID")
 
     //${renderMeta(graph.meta)}
     s"""
@@ -128,9 +140,9 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
        |
        |object Graph {
        |  sealed trait CreateReadUpdate
-       |  case class ReadUid(uid: UUID) extends CreateReadUpdate
-       |  case class ReadQuery(query: String) extends CreateReadUpdate
-       |  case class New[A](newA: A) extends CreateReadUpdate
+       |  sealed trait VertexByUid extends CreateReadUpdate { val uid: UUID }
+       |  sealed trait VertexByQuery extends CreateReadUpdate { val query: String }
+       |  sealed trait VertexNew[A] extends CreateReadUpdate
        |
        |  // $${renderMeta(graph.meta)} // Not implemented
        |${indent(2)(graph.allClazzez.map(renderClazz).mkString("\n"))}
