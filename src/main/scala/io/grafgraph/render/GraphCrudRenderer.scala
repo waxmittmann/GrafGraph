@@ -1,7 +1,7 @@
 package io.grafgraph.render
 
 import io.grafdefinition.WithBuilders
-import io.grafgraph.definition.{Attr, Attribute, AttributeInstance}
+import io.grafgraph.definition.{Attr, Attribute}
 import io.grafgraph.example.Lake
 import org.scalafmt.config.{NewlineCurlyLambda, ScalafmtConfig}
 
@@ -130,7 +130,7 @@ object GraphCrudRenderer {
 
   def genRenderParam(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState, attr: Attribute): String = attr match {
     case Attr.UID(name)            => s"ele.$name.toString"
-    case Attr.String(name, value)  => value.getOrElse(s""""ele.${name}"""")
+    case Attr.String(name, value)  => value.getOrElse(s"ele.$name")
     case Attr.Int(name, value)     => value.map(_.toString).getOrElse(s"ele.$name")
     case Attr.Boolean(name, value) => value.map(b =>    s"$b.booleanValue().asInstanceOf[Object]").getOrElse(s"ele.$name")
   }
@@ -139,56 +139,7 @@ object GraphCrudRenderer {
     state.allAttributes.map(renderCreateAttribute).mkString(", ")
   }
 
-  def renderCreateAttribute(attr: Attribute): String = {
-//  def renderCreateAttribute(attr: Attribute[_]): String = {
-//    val attrRender = attr match {
-//      case AttrInstance.Int(_, value)     => value
-//      case AttrInstance.String(_, value)  => s"'$value'"
-//      case AttrInstance.UID(_, value)     => s"'${value.toString}'"
-//      case AttrInstance.Boolean(_, value) => value.toString
-//    }
-//
-//    s"${attr.name}: $attrRender"
-
-    s"${attr.name}: {ele.${attr.name}}"
-//    s"${attr.name}: ele.${attr.name}"
-  }
-
-  /*
-          session.writeTransaction {
-          tx =>
-            val params = Map[String, Object](
-              "ele" -> Map[String, Object](
-                "uid" -> ele.uid.toString,
-                "definition" -> ele.definition
-              ).asJava
-            ).asJava
-
-            tx.run(
-              """
-       CREATE (Instance: Class;Instance {uid: {ele.uid}, definition: {ele.definition}})
-            """, params)
-
-            tx.success()
-        }
-        session.close()
-     */
-  /*
-    val params = Map[String, Object](
-     "ele" -> Map[String, Object](
-        "uid" -> ele.uid.toString,
-        "definition" -> ele.definition
-     ).asJava
-  ).asJava
-   */
-
-
-
-//  def renderParams(params: Map[String, AnyRef]) = params.toSeq match {
-//    case (key: String, values: List[AnyRef]) =>
-//
-//    case (key: String, values: List[AnyRef]) =>
-//  }
+  def renderCreateAttribute(attr: Attribute): String = s"${attr.name}: {${attr.name}}"
 
   def neo4jTx(query: String, params: String): String =
     s"""
@@ -215,31 +166,6 @@ object GraphCrudRenderer {
     }.toList.mkString("\n"))}
      """.stripMargin
 
-  /*
-      def create(newArtifactDefn: Instance): Instance = {
-      val query = s"""
-         |CREATE (artifactDefn:ArtifactDefn { uid: ${newArtifactDefn.toString}, label: ${newArtifactDefn.label} })
-      """.stripMargin
-
-      val instance: New = ??? //graph.query(query)
-
-      instance
-    }
-
-    //    def create(newartifactDefn: New): New =
-//    def create[S <: New](newartifactDefn: S): S =
-//      newartifactDefn match {
-//        case Instance(uid, label) =>
-//          val query = s"""
-//             |CREATE (artifactDefn:ArtifactDefn { uid: ${uid.toString}, label: ${label} })
-//          """.stripMargin
-//
-//          val instance: New = graph.query(query)
-//
-//
-//      }
-  }
-   */
   def renderVertex(vertex: WithBuilders#Vertex): String = {
     indent(2)({
       s"""
