@@ -95,17 +95,31 @@ object GraphCrudRenderer {
        |
        |) $extendsPart
        |
-       |${/*renderStateCreate(vertex, state)*/}
+       |${renderStateCreate(vertex, state)}
      """.stripMargin
   }
 
-//  def renderStateCreate(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
-//    s"""
-//       |CREATE (${state.name}: ${state.name})
-//     """.stripMargin
-//
-//    state.
-//  }
+
+  def renderStateCreate(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+    val query = s"""
+       |CREATE (${state.name}: Class;${state.name} {${renderCreateAttributes(vertex, state)})
+     """.stripMargin
+
+    neo4jTx(query)
+  }
+
+  def renderCreateAttributes(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = ""
+
+  def neo4jTx(query: String): String =
+    s"""
+       |val session = graph.driver.session()
+       |
+       |session.writeTransaction { tx =>
+       |  tx.run(\"\"\"$query\"\"\")
+       |  tx.success()
+       |}
+       |session.close()
+     """.stripMargin
 
   def renderVersion(vertex: WithBuilders#Vertex, last: WithBuilders#VertexVersion): String =
     s"""
@@ -163,7 +177,28 @@ object GraphCrudRenderer {
   // Todo: Make all this configurable
   def render(graph: WithBuilders): String = {
     val packageName = "io.testgraph"
-    val imports = Seq[String]("java.util.UUID")
+    val imports = Seq[String]("java.util.UUID", "org.neo4j.driver.v1._")
+
+    val neo4jGraph =
+      """
+        |
+        |class Neo4jGraph(url: String, user: String, password: String) {
+        |
+        |  private val token: AuthToken = AuthTokens.basic(user, password)
+        |
+        |  val driver: Driver = GraphDatabase.driver(
+        |    url,
+        |    token,
+        |    Config.build.withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig
+        |  )
+        |
+        |  def close(): Unit = {
+        |    driver.close()
+        |  }
+        |}
+        |
+      """.stripMargin
+
 
     //${renderMeta(graph.meta)}
     val output = s"""
@@ -171,7 +206,11 @@ object GraphCrudRenderer {
        |
        |${imports.map(i => s"import $i").mkString("\n")}
        |
+       |$neo4jGraph
+       |
        |object Graph {
+       |  val graph = new Neo4jGraph("", "", "")
+       |
        |  sealed trait CreateReadUpdate
        |  sealed trait VertexByUid extends CreateReadUpdate { val uid: UUID }
        |  sealed trait VertexByQuery extends CreateReadUpdate { val query: String }
@@ -198,6 +237,8 @@ object GraphCrudRenderer {
         alwaysBeforeMultilineDef = true
       )
     val config = ScalafmtConfig.default.copy(newlines = newlines)
+
+    println(s"PreRender: ${output.linesWithSeparators.zipWithIndex.map { case (line, index) => s"$index: $line"}.mkString}")
 
     org.scalafmt.Scalafmt.format(output, config).get
   }
