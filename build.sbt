@@ -16,6 +16,9 @@ val scalazVersion = "7.2.16"
 val scalacheckVersion = "1.13.4"
 val specsVersion = "4.0.0"
 
+val neo4jBase = "3.3.3"
+val neo4jDriver = "1.5.1"
+
 // Todo: Factor out dependencies
 libraryDependencies ++= Seq(
   // Scalaz
@@ -71,7 +74,14 @@ libraryDependencies ++= Seq(
   // PureConfig
 //  "com.github.pureconfig" %% "pureconfig" % "0.9.1"
 
-  // Test
+// Neo4j client libs
+  "org.neo4j" % "neo4j" % neo4jBase,
+  "org.neo4j" % "neo4j-common" % neo4jBase,
+  "org.neo4j" % "neo4j-cypher" % neo4jBase,
+  "org.neo4j" % "neo4j-bolt" % neo4jBase,
+  "org.neo4j.driver" % "neo4j-java-driver" % neo4jDriver,
+
+// Test
   "org.specs2" %% "specs2-core" % specsVersion % "test",
   "org.scalacheck" %% "scalacheck" % scalacheckVersion % "test"
 

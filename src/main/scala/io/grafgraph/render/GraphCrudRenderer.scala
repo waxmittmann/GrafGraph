@@ -10,14 +10,13 @@ object GraphCrudRenderer {
   def attrType(attr: Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
     case Attr.String(_, _) => "String"
-    case Attr.UID(_, _) => "String"
+    case Attr.UID(_) => "UUID"
     case Attr.Boolean(_, _) => "Boolean"
   }
 
   def attrValue(attr: Attribute): String = attr match {
     case Attr.Int(_, Some(value)) => s"= $value"
     case Attr.String(_, Some(value)) => s"""= "$value""""
-    case Attr.UID(_, Some(value)) => s"""= "$value""""
     case Attr.Boolean(_, Some(value)) => if (value) "= true" else "= false"
     case _ => ""
   }
@@ -80,19 +79,14 @@ object GraphCrudRenderer {
       vertex.name :: s"New" :: Nil
     )
 
-    val attrs = state.attributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
+    val attrs = state.allAttributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
 
     val extendsPart = interfaces match {
       case (ls: List[String]) => s"extends ${ls.mkString(" with ")}"
       case Nil => ""
     }
 
-    val name = state.name.getOrElse(
-      if (singleState)
-        "Instance"
-      else
-        s"State_$index"
-    )
+    val name = state.name
 
     s"""
        |case class $name(
@@ -100,9 +94,18 @@ object GraphCrudRenderer {
        |${indent(2)(attrs.mkString(",\n"))}
        |
        |) $extendsPart
+       |
+       |${/*renderStateCreate(vertex, state)*/}
      """.stripMargin
   }
 
+//  def renderStateCreate(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+//    s"""
+//       |CREATE (${state.name}: ${state.name})
+//     """.stripMargin
+//
+//    state.
+//  }
 
   def renderVersion(vertex: WithBuilders#Vertex, last: WithBuilders#VertexVersion): String =
     s"""
@@ -116,6 +119,31 @@ object GraphCrudRenderer {
     }.toList.mkString("\n"))}
      """.stripMargin
 
+  /*
+      def create(newArtifactDefn: Instance): Instance = {
+      val query = s"""
+         |CREATE (artifactDefn:ArtifactDefn { uid: ${newArtifactDefn.toString}, label: ${newArtifactDefn.label} })
+      """.stripMargin
+
+      val instance: New = ??? //graph.query(query)
+
+      instance
+    }
+
+    //    def create(newartifactDefn: New): New =
+//    def create[S <: New](newartifactDefn: S): S =
+//      newartifactDefn match {
+//        case Instance(uid, label) =>
+//          val query = s"""
+//             |CREATE (artifactDefn:ArtifactDefn { uid: ${uid.toString}, label: ${label} })
+//          """.stripMargin
+//
+//          val instance: New = graph.query(query)
+//
+//
+//      }
+  }
+   */
   def renderVertex(vertex: WithBuilders#Vertex): String = {
     indent(2)({
       s"""
@@ -124,7 +152,8 @@ object GraphCrudRenderer {
 
          |${indent(2)(renderVersion(vertex, vertex.versions.head))}
          |
-         |  def create(new${uncapitalize(vertex.name)}: New): New = ???
+         |
+         |  //def create(new${uncapitalize(vertex.name)}: New): New = ???
          |
          |}
     """.stripMargin

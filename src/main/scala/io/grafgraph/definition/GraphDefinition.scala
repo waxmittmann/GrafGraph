@@ -13,7 +13,7 @@ object Attr {
   // Value probably to become test
   case class Int(name: java.lang.String, value: Option[scala.Int] = None) extends Attribute
   case class String(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
-  case class UID(name: java.lang.String, value: Option[UUID] = None) extends Attribute
+  case class UID(name: java.lang.String) extends Attribute
   //case class UID(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
   case class Boolean(name: java.lang.String, value: Option[java.lang.Boolean] = None) extends Attribute
 
@@ -23,10 +23,12 @@ object Attr {
 
 trait GraphDefinition {
 
+  final val uidAttribute: UID = UID("uid")
+
   val ExtraGlobalAttributes: Seq[Attribute]
-  lazy val GlobalAttributes: Seq[Attribute] = {
+  lazy final val GlobalAttributes: Seq[Attribute] = {
     assert(!ExtraGlobalAttributes.map(_.name).toSet.contains("uid"))
-    UID("uid") +: ExtraGlobalAttributes
+    uidAttribute +: ExtraGlobalAttributes
   }
 
   // Todo: Honor clazz
@@ -54,20 +56,22 @@ trait GraphDefinition {
 
   object VertexState {
     def apply(
-      name: Option[String],
+      name: String,
       edges: Seq[Edge],
       attributes: Seq[Attribute]
     ): VertexState = {
-      new VertexState(name, edges, GlobalAttributes ++ attributes)
+      new VertexState(name, edges, attributes)
     }
   }
 
   // todo: case class ok?
   case class VertexState private(
-    name: Option[String],
+    name: String,
     edges: Seq[Edge],
-    attributes: Seq[Attribute]
-  )
+    instanceAttributes: Seq[Attribute]
+  ) {
+    def allAttributes: Seq[Attribute] = GlobalAttributes ++ instanceAttributes
+  }
 
   // todo: just make it a nel
   case class VertexVersion(

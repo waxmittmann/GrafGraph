@@ -72,7 +72,7 @@ object GraphDaoRenderer {
   ): String = {
     s"""
        |case class ${vertex.name}${index.fold("")(s => s"_$s")}(
-       |${allowedDefinition.attributes.map(writeAttribute).map(s => s"  $s\n").mkString}
+       |${allowedDefinition.allAttributes.map(writeAttribute).map(s => s"  $s\n").mkString}
        |${allowedDefinition.edges.map(e => writeEdge(vertex, e)).map(s => s"  $s\n").mkString}
       |) ${index.fold("extends GraphElement")(_ => s"extends GraphElement with ${vertex.name}")}
      """.stripMargin
@@ -81,19 +81,16 @@ object GraphDaoRenderer {
   def attrType(attr: Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
     case Attr.String(_, _) => "String"
-    case Attr.UID(_, _) => "String"
+    case Attr.UID(_) => "UUID"
     case Attr.Boolean(_, _) => "Boolean"
   }
 
   def attrValue(attr: Attribute): String = attr match {
     case Attr.Int(_, Some(value)) => s"= $value"
     case Attr.String(_, Some(value)) => s"""= "$value""""
-    case Attr.UID(_, Some(value)) => s"""= "$value""""
     case Attr.Boolean(_, Some(value)) => if (value) "= true" else "= false"
     case _ => ""
   }
-
-
 
   def writeAttribute(attr: Attribute): String = {
     s"${attr.name}: ${attrType(attr)}${attrValue(attr)},"
@@ -111,10 +108,8 @@ object GraphDaoRenderer {
     } else {
       s"sealed trait ${vertex.name}" +
         vertex.latest.states.zipWithIndex.map { case (allowedDefinition: Lake.VertexState, index: Int) =>
-          writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name.getOrElse(index.toString)))
+          writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name))
         }.toList.mkString("\n\n")
     }
-
   }
-
 }

@@ -40,8 +40,9 @@ trait WithBuilders extends GraphDefinition {
   }
   case class VersionBuilder(parent: VertexBuilder2, definitions: Seq[VertexState]) {
 
-    def state(name: String) = StateBuilder(this, Some(name), Seq.empty, Seq.empty)
-    def state = StateBuilder(this, None, Seq.empty, Seq.empty)
+    def state(name: String) = StateBuilder(this, name, Seq.empty, Seq.empty)
+
+    def singleState = StateBuilder(this, "Instance", Seq.empty, Seq.empty) // todo: something to ensure they don't add more states
 
     def withState(defn: VertexState): VersionBuilder =
       this.copy(definitions = defn +: definitions)
@@ -49,7 +50,7 @@ trait WithBuilders extends GraphDefinition {
 
   case class StateBuilder(
     parent: VersionBuilder,
-    name: Option[String],
+    name: String,
     edges: Seq[Edge],
     attributes: Seq[Attribute]
   ) {
@@ -73,7 +74,6 @@ trait WithBuilders extends GraphDefinition {
     def attribute(attribute: Attribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
     def state(newName: String): StateBuilder = parent.copy().withState(VertexState(name, edges, attributes)).state(newName)
-    def state: StateBuilder = parent.withState(VertexState(None, edges, attributes)).state
 
     def version: VersionBuilder = {
       val grandparent = parent.parent

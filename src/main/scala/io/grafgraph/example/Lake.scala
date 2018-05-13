@@ -15,7 +15,7 @@ object Lake extends WithBuilders {
 //    (v("ArtifactDefn") extendz artifactClazzDefn)
       vertex("ArtifactDefn")
       .version
-        .state
+        .singleState
           .attribute(Attr.String("label"))
       .done
 
@@ -34,7 +34,7 @@ object Lake extends WithBuilders {
     val workflowDefinition: Lake.Vertex =
       vertex("WorkflowDefn")
       .version
-      .state
+      .singleState
       .otherEdge("artifactDefinition", artifactDefn, toMany = true)
       .attribute(Attr.String("definition"))
       .done
