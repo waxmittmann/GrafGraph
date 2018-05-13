@@ -1,31 +1,13 @@
 package io.grafgraph.example
 
 import io.grafdefinition.WithBuilders
-import io.grafgraph.definition.GraphDefinition
+import io.grafgraph.definition.{Attr, Attribute}
 
-sealed trait Attribute {
-  val name: String
-}
+object Lake extends WithBuilders {
+  import Attr.boolean
 
-// Todo: keep here?
-object Attr {
-  // Value probably to become test
-  case class Int(name: java.lang.String, value: Option[scala.Int] = None) extends Attribute
-  case class String(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
-  case class UID(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
-  case class Boolean(name: java.lang.String, value: Option[java.lang.Boolean] = None) extends Attribute
-
-  def boolean(name: java.lang.String, value: java.lang.Boolean): Attribute = Boolean(name, Some(value))
-  def boolean(name: java.lang.String): Attribute = Boolean(name, None)
-}
-import Attr.boolean
-
-object Lake extends WithBuilders[Attribute] {
-
-  override val GlobalAttributes: Seq[GraphAttribute] =
-    Seq(Attr.UID("uid"))
-
-//  type OtherGraph = WithBuilders[Attribute]
+  // Probably add a 'clean' flag here, set to 'false' for any non-raw input that isn't created via pipeline
+  override val ExtraGlobalAttributes: Seq[Attribute] = Seq()
 
   val artifactClazzDefn: Clazz = Clazz("Artifact", Seq.empty, Seq.empty)
 

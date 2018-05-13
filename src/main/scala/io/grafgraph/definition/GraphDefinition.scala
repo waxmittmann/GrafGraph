@@ -1,18 +1,39 @@
 package io.grafgraph.definition
 
+import java.util.UUID
+
 import cats.data.NonEmptyList
+import io.grafgraph.definition.Attr.UID
 
-trait GraphDefinition[A] {
+sealed trait Attribute {
+  val name: String
+}
 
-  type GraphAttribute = A
+object Attr {
+  // Value probably to become test
+  case class Int(name: java.lang.String, value: Option[scala.Int] = None) extends Attribute
+  case class String(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
+  case class UID(name: java.lang.String, value: Option[UUID] = None) extends Attribute
+  //case class UID(name: java.lang.String, value: Option[java.lang.String] = None) extends Attribute
+  case class Boolean(name: java.lang.String, value: Option[java.lang.Boolean] = None) extends Attribute
 
-  val GlobalAttributes: Seq[GraphAttribute] = Seq.empty
+  def boolean(name: java.lang.String, value: java.lang.Boolean): Attribute = Boolean(name, Some(value))
+  def boolean(name: java.lang.String): Attribute = Boolean(name, None)
+}
+
+trait GraphDefinition {
+
+  val ExtraGlobalAttributes: Seq[Attribute]
+  lazy val GlobalAttributes: Seq[Attribute] = {
+    assert(!ExtraGlobalAttributes.map(_.name).toSet.contains("uid"))
+    UID("uid") +: ExtraGlobalAttributes
+  }
 
   // Todo: Honor clazz
   case class Clazz(
     name: String,
     edges: Seq[Edge],
-    attributes: Seq[A]
+    attributes: Seq[Attribute]
   )
 
   case class Vertex(
@@ -35,7 +56,7 @@ trait GraphDefinition[A] {
     def apply(
       name: Option[String],
       edges: Seq[Edge],
-      attributes: Seq[A]
+      attributes: Seq[Attribute]
     ): VertexState = {
       new VertexState(name, edges, GlobalAttributes ++ attributes)
     }
@@ -45,7 +66,7 @@ trait GraphDefinition[A] {
   case class VertexState private(
     name: Option[String],
     edges: Seq[Edge],
-    attributes: Seq[A]
+    attributes: Seq[Attribute]
   )
 
   // todo: just make it a nel
@@ -70,15 +91,14 @@ trait GraphDefinition[A] {
     to: Vertex,
     optional: Boolean = false,
     toMany: Boolean = false,
-    attribute: Seq[A] = Seq.empty
+    attribute: Seq[Attribute] = Seq.empty
   ) extends Edge
 
   case class SelfEdge(
     name: String,
-    attribute: Seq[A],
+    attribute: Seq[Attribute],
     optional: Boolean = false,
     toMany: Boolean = false
   ) extends Edge
 
-//  val builders: Builders[A] = Builders[A](this)
 }

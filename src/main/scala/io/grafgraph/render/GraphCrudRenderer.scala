@@ -1,16 +1,11 @@
 package io.grafgraph.render
-import cats.data.NonEmptyList
-import io.grafdefinition.WithBuilders
-import io.grafgraph.example.{Attr, Attribute, Lake}
-import java.io
 
+import io.grafdefinition.WithBuilders
+import io.grafgraph.definition.{Attr, Attribute}
+import io.grafgraph.example.Lake
 import org.scalafmt.config.{NewlineCurlyLambda, ScalafmtConfig}
 
 object GraphCrudRenderer {
-
-  /*
-  import java.util.UUID
-   */
 
   def attrType(attr: Attribute): String = attr match {
     case Attr.Int(_, _) => "Int"
@@ -33,7 +28,7 @@ object GraphCrudRenderer {
 
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
-  def renderEdge(prefix: String)(selfName: String)(e: WithBuilders[Attribute]#Edge): String = indent(2)({
+  def renderEdge(prefix: String)(selfName: String)(e: WithBuilders#Edge): String = indent(2)({
     //  def writeEdge(self: GraphDefinition[Attribute]#Vertex, e: GraphDefinition[Attribute]#Edge): String = {
 
     val edgeName = uncapitalize(e.name)
@@ -65,7 +60,7 @@ object GraphCrudRenderer {
     s"$prefix$r"
   })
 
-  def renderClazz(clazz: WithBuilders[Attribute]#Clazz): String = indent(2)({
+  def renderClazz(clazz: WithBuilders#Clazz): String = indent(2)({
     s"""
       |sealed trait ${clazz.name} {
       |${indent(2)(clazz.attributes.map(renderAttribute("val")).mkString(",\n"))}
@@ -76,8 +71,8 @@ object GraphCrudRenderer {
 
   def renderState(
     index: Int, singleState: Boolean,
-    vertex: WithBuilders[Attribute]#Vertex,
-    state: WithBuilders[Attribute]#VertexState
+    vertex: WithBuilders#Vertex,
+    state: WithBuilders#VertexState
   ): String = indent(2) {
     val interfaces: Seq[String] = vertex.clazz.map { c =>
       c.name :: vertex.name :: s"New" :: Nil
@@ -109,7 +104,7 @@ object GraphCrudRenderer {
   }
 
 
-  def renderVersion(vertex: WithBuilders[Attribute]#Vertex, last: WithBuilders[Attribute]#VertexVersion): String =
+  def renderVersion(vertex: WithBuilders#Vertex, last: WithBuilders#VertexVersion): String =
     s"""
        |
        |  case class ByUid(uid: UUID) extends VertexByUid with ${vertex.name}
@@ -121,7 +116,7 @@ object GraphCrudRenderer {
     }.toList.mkString("\n"))}
      """.stripMargin
 
-  def renderVertex(vertex: WithBuilders[Attribute]#Vertex): String = {
+  def renderVertex(vertex: WithBuilders#Vertex): String = {
     indent(2)({
       s"""
          |object ${vertex.name} {
@@ -137,7 +132,7 @@ object GraphCrudRenderer {
   }
 
   // Todo: Make all this configurable
-  def render(graph: WithBuilders[Attribute]): String = {
+  def render(graph: WithBuilders): String = {
     val packageName = "io.testgraph"
     val imports = Seq[String]("java.util.UUID")
 
@@ -159,23 +154,6 @@ object GraphCrudRenderer {
        |}
      """.stripMargin
 
-    /*
-    @DeriveConfDecoder
-case class Newlines(
-    neverInResultType: Boolean = false,
-    neverBeforeJsNative: Boolean = false,
-    sometimesBeforeColonInMethodReturnType: Boolean = true,
-    penalizeSingleSelectMultiArgList: Boolean = true,
-    alwaysBeforeCurlyBraceLambdaParams: Boolean = false,
-    alwaysBeforeTopLevelStatements: Boolean = false,
-    afterCurlyLambda: NewlineCurlyLambda = NewlineCurlyLambda.never,
-    afterImplicitKWInVerticalMultiline: Boolean = false,
-    beforeImplicitKWInVerticalMultiline: Boolean = false,
-    alwaysBeforeElseAfterCurlyIf: Boolean = false,
-    alwaysBeforeMultilineDef: Boolean = true
-)
-
-     */
     val newlines = ScalafmtConfig.default.newlines
       .copy(
         neverInResultType = false,

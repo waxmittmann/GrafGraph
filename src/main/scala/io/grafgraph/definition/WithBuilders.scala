@@ -1,13 +1,13 @@
 package io.grafdefinition
 
 import cats.data.NonEmptyList
-import io.grafgraph.definition.GraphDefinition
+import io.grafgraph.definition.{Attribute, GraphDefinition}
 
 // Don't love 'WithBuilders' extending 'GraphDefinition' but it works, and at least this way I can keep apart the
 // factory from defn. Still open question as to whether this is the best way to separate, and if it is if it's worth it.
 
 //case class Builders[A](graph: GraphDefinition[A]) {
-trait WithBuilders[A] extends GraphDefinition[A] {
+trait WithBuilders extends GraphDefinition {
 
 //  def clazz(name: String): ClazzBuilder1 = ClazzBuilder1(
 //
@@ -51,12 +51,12 @@ trait WithBuilders[A] extends GraphDefinition[A] {
     parent: VersionBuilder,
     name: Option[String],
     edges: Seq[Edge],
-    attributes: Seq[GraphAttribute]
+    attributes: Seq[Attribute]
   ) {
     def otherEdge(
       name: String,
       to: Vertex,
-      attributes: Seq[GraphAttribute] = Seq.empty,
+      attributes: Seq[Attribute] = Seq.empty,
       toMany: Boolean = false,
       optional: Boolean = false
     ): StateBuilder =
@@ -64,13 +64,13 @@ trait WithBuilders[A] extends GraphDefinition[A] {
 
     def selfEdge(
       name: String,
-      attributes: Seq[GraphAttribute] = Seq.empty,
+      attributes: Seq[Attribute] = Seq.empty,
       toMany: Boolean = false,
       optional: Boolean = false
     ): StateBuilder =
       this.copy(edges = SelfEdge(name, attributes, toMany, optional) +: edges)
 
-    def attribute(attribute: GraphAttribute): StateBuilder = this.copy(attributes = attribute +: attributes)
+    def attribute(attribute: Attribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
     def state(newName: String): StateBuilder = parent.copy().withState(VertexState(name, edges, attributes)).state(newName)
     def state: StateBuilder = parent.withState(VertexState(None, edges, attributes)).state
