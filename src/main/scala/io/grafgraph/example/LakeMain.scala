@@ -25,7 +25,8 @@ object LakeMain {
 
     Files.write(
       Paths.get("./src/main/scala/io/testgraph/TestGraph.scala"),
-      GraphCrudRenderer.render(Lake).lines.toList.flatMap(s => if (s.trim.isEmpty) None else Some(s)).mkString("\n").getBytes,
+//      GraphCrudRenderer.render(Lake).lines.toList.flatMap(s => if (s.trim.isEmpty) None else Some(s)).mkString("\n").getBytes,
+      GraphCrudRenderer.render(Lake).getBytes,
       StandardOpenOption.CREATE
     )
   }

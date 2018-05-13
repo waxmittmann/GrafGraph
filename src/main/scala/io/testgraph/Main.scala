@@ -1,11 +1,18 @@
 package io.testgraph
 
+import io.testgraph.Graph.ArtifactDefn
+
 object Main {
 
   def main(args: Array[String]): Unit = {
 
 
-//    val tg = Graph.ArtifactDefn.ByQuery("abc")
+//    val tg: ArtifactDefn.ByQuery = Graph.ArtifactDefn.ByQuery("abc")
+
+//    val artifactDefn = Graph.ArtifactDefn.Initial(
+//
+//    )
+//    Graph.ArtifactDefn.create()
 
 
   }

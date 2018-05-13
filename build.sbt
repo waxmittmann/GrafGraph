@@ -29,7 +29,9 @@ libraryDependencies ++= Seq(
 //  "org.typelevel" %% "cats-mtl" % catsVersion,
 //  "org.typelevel" %% "dogs-core" % "0.6.9",
 
-  // Eff
+  "com.geirsson" %% "scalafmt-core" % "1.5.1",
+
+// Eff
 //  "org.atnos" %% "eff" % "4.5.0",
 
   // Monocle
@@ -72,6 +74,7 @@ libraryDependencies ++= Seq(
   // Test
   "org.specs2" %% "specs2-core" % specsVersion % "test",
   "org.scalacheck" %% "scalacheck" % scalacheckVersion % "test"
+
 )
 
 // For macro annotations

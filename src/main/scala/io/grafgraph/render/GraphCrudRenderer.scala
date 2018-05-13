@@ -4,6 +4,8 @@ import io.grafdefinition.WithBuilders
 import io.grafgraph.example.{Attr, Attribute, Lake}
 import java.io
 
+import org.scalafmt.config.{NewlineCurlyLambda, ScalafmtConfig}
+
 object GraphCrudRenderer {
 
   /*
@@ -33,24 +35,28 @@ object GraphCrudRenderer {
 
   def renderEdge(prefix: String)(selfName: String)(e: WithBuilders[Attribute]#Edge): String = indent(2)({
     //  def writeEdge(self: GraphDefinition[Attribute]#Vertex, e: GraphDefinition[Attribute]#Edge): String = {
+
+    val edgeName = uncapitalize(e.name)
+
     val r = e match {
       // Hmm ok, so here I need a concrete instance
-      case Lake.OtherEdge(name: String, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
+      case Lake.OtherEdge(_, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
+
         // Ignore attribute for now
         // don't do optional; use toMany for that
         if (toMany) {
-          s"${uncapitalize(name)}s: Seq[${to.name}]"
+          s"${edgeName}s: Seq[${to.name}.${to.name}]"
         } else {
-          s"${uncapitalize(name)}: ${to.name}"
+          s"$edgeName: ${to.name}.${to.name}"
         }
 
       }
 
-      case Lake.SelfEdge(name, attribute, optional, toMany) => {
+      case Lake.SelfEdge(_, attribute, optional, toMany) => {
         if (toMany) {
-          s"${uncapitalize(name)}s: Seq[$selfName]"
+          s"${edgeName}s: Seq[$selfName]"
         } else {
-          s"${uncapitalize(name)}: $selfName"
+          s"$edgeName: $selfName"
         }
 
       }
@@ -69,39 +75,37 @@ object GraphCrudRenderer {
   })
 
   def renderState(
-    index: Int,
+    index: Int, singleState: Boolean,
     vertex: WithBuilders[Attribute]#Vertex,
     state: WithBuilders[Attribute]#VertexState
   ): String = indent(2) {
-//    val interfaces: Seq[String] = vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
     val interfaces: Seq[String] = vertex.clazz.map { c =>
       c.name :: vertex.name :: s"New" :: Nil
     }.getOrElse(
       vertex.name :: s"New" :: Nil
-    )//vertex.name :: vertex.clazz.map(_.name :: Nil).getOrElse(Nil)
+    )
 
     val attrs = state.attributes.map(renderAttribute("")) ++: state.edges.map(renderEdge("")(vertex.name))
 
     val extendsPart = interfaces match {
-//      case (ls: List[String]) => s"extends ${ls.tail.map(i => s" with $i").mkString}"
       case (ls: List[String]) => s"extends ${ls.mkString(" with ")}"
       case Nil => ""
     }
 
-//    val extendsPart = s"extends ${interfaces.head} with ${interfaces.tail.map(i => s" with $i").mkString}"
-//case class ${state.name.getOrElse(s"State_$index")}(
+    val name = state.name.getOrElse(
+      if (singleState)
+        "Instance"
+      else
+        s"State_$index"
+    )
+
     s"""
-       |case class ${state.name.getOrElse(if (index == 0) "Initial" else s"State_$index")}(
+       |case class $name(
        |
        |${indent(2)(attrs.mkString(",\n"))}
        |
        |) $extendsPart
      """.stripMargin
-/*
-${indent(2)(state.attributes.map(renderAttribute).mkString(",\n"))}
-${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
-
- */
   }
 
 
@@ -113,23 +117,24 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
        |  sealed trait New extends VertexNew[${vertex.name}]
        |
        |${indent(2)(last.states.zipWithIndex.map { case (state, index) =>
-      renderState(index, vertex, state)
+      renderState(index, last.states.length == 1, vertex, state)
     }.toList.mkString("\n"))}
      """.stripMargin
 
-  def renderVertex(vertex: WithBuilders[Attribute]#Vertex): String = indent(2)({
-    s"""
-       |sealed trait ${vertex.name}
-       |
-       |object ${vertex.name} {
-       |
-       |${indent(4)(renderVersion(vertex, vertex.versions.head))}
-       |
-       |  def create(new${uncapitalize(vertex.name)}: New): Unit = ???
-       |
-       |}
+  def renderVertex(vertex: WithBuilders[Attribute]#Vertex): String = {
+    indent(2)({
+      s"""
+         |object ${vertex.name} {
+         |  sealed trait ${vertex.name}
+
+         |${indent(2)(renderVersion(vertex, vertex.versions.head))}
+         |
+         |  def create(new${uncapitalize(vertex.name)}: New): New = ???
+         |
+         |}
     """.stripMargin
-  })
+    })
+  }
 
   // Todo: Make all this configurable
   def render(graph: WithBuilders[Attribute]): String = {
@@ -137,7 +142,7 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
     val imports = Seq[String]("java.util.UUID")
 
     //${renderMeta(graph.meta)}
-    s"""
+    val output = s"""
        |package $packageName
        |
        |${imports.map(i => s"import $i").mkString("\n")}
@@ -148,16 +153,50 @@ ${indent(2)(state.edges.map(renderEdge(vertex.name)).mkString(",\n"))}
        |  sealed trait VertexByQuery extends CreateReadUpdate { val query: String }
        |  sealed trait VertexNew[A] extends CreateReadUpdate
        |
-       |  // $${renderMeta(graph.meta)} // Not implemented
+       |   // $${renderMeta(graph.meta)} // Not implemented
        |${indent(2)(graph.allClazzez.map(renderClazz).mkString("\n"))}
        |${indent(2)(graph.allVertices.map(renderVertex).mkString("\n"))}
        |}
      """.stripMargin
+
+    /*
+    @DeriveConfDecoder
+case class Newlines(
+    neverInResultType: Boolean = false,
+    neverBeforeJsNative: Boolean = false,
+    sometimesBeforeColonInMethodReturnType: Boolean = true,
+    penalizeSingleSelectMultiArgList: Boolean = true,
+    alwaysBeforeCurlyBraceLambdaParams: Boolean = false,
+    alwaysBeforeTopLevelStatements: Boolean = false,
+    afterCurlyLambda: NewlineCurlyLambda = NewlineCurlyLambda.never,
+    afterImplicitKWInVerticalMultiline: Boolean = false,
+    beforeImplicitKWInVerticalMultiline: Boolean = false,
+    alwaysBeforeElseAfterCurlyIf: Boolean = false,
+    alwaysBeforeMultilineDef: Boolean = true
+)
+
+     */
+    val newlines = ScalafmtConfig.default.newlines
+      .copy(
+        neverInResultType = false,
+        neverBeforeJsNative = false,
+        sometimesBeforeColonInMethodReturnType = true,
+        penalizeSingleSelectMultiArgList = true,
+        alwaysBeforeCurlyBraceLambdaParams = true,
+        alwaysBeforeTopLevelStatements = true,
+        afterCurlyLambda = NewlineCurlyLambda.always,
+        afterImplicitKWInVerticalMultiline = false,
+        beforeImplicitKWInVerticalMultiline = false,
+        alwaysBeforeElseAfterCurlyIf = true,
+        alwaysBeforeMultilineDef = true
+      )
+    val config = ScalafmtConfig.default.copy(newlines = newlines)
+
+    org.scalafmt.Scalafmt.format(output, config).get
   }
 
 
   def indent(chars: Int)(str: String): String =
-//    str
     str.linesWithSeparators.map(line => (" " take chars) + line).mkString//.mkString("\n")
 
 }
