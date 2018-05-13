@@ -3,7 +3,8 @@ package io.grafgraph.example
 import java.io.File
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
-import io.grafgraph.render.{GraphCrudRenderer, GraphDaoRenderer}
+import io.grafgraph.render.GraphDaoRenderer
+import io.grafgraph.render.crud.GraphCrudRenderer
 
 object LakeMain {
   def main(args: Array[String]): Unit = {
