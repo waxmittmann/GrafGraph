@@ -1,7 +1,7 @@
 package io.grafgraph.render
 
 import io.grafdefinition.WithBuilders
-import io.grafgraph.definition.{Attr, Attribute}
+import io.grafgraph.definition.{Attr, Attribute, AttributeInstance}
 import io.grafgraph.example.Lake
 import org.scalafmt.config.{NewlineCurlyLambda, ScalafmtConfig}
 
@@ -101,25 +101,107 @@ object GraphCrudRenderer {
 
 
   def renderStateCreate(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+    val renderParams = genRenderParams(vertex, state)
+
     val query = s"""
-       |CREATE (${state.name}: Class;${state.name} {${renderCreateAttributes(vertex, state)})
+       ||CREATE (${state.name}: Class_${state.name} {${renderCreateAttributes(vertex, state)}})
      """.stripMargin
 
-    neo4jTx(query)
+    // Todo: Return object
+    //def create(ele: ${state.name}): ${state.name} = {
+    s"""
+       |def create(ele: ${state.name}): Unit = {
+       |  ${neo4jTx(query, renderParams)}
+       |}
+     """.stripMargin
   }
 
-  def renderCreateAttributes(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = ""
+  def genRenderParams(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+    val params = state.allAttributes.map { (attr: Attribute) =>
+      s""""${attr.name}" -> ${genRenderParam(vertex, state, attr)}"""
+    }.mkString(",")
 
-  def neo4jTx(query: String): String =
+    s"""
+       |Map[String, Object](
+       |  $params
+       |).asJava
+     """.stripMargin
+  }
+
+  def genRenderParam(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState, attr: Attribute): String = attr match {
+    case Attr.UID(name)            => s"ele.$name.toString"
+    case Attr.String(name, value)  => value.getOrElse(s""""ele.${name}"""")
+    case Attr.Int(name, value)     => value.map(_.toString).getOrElse(s"ele.$name")
+    case Attr.Boolean(name, value) => value.map(b =>    s"$b.booleanValue().asInstanceOf[Object]").getOrElse(s"ele.$name")
+  }
+
+  def renderCreateAttributes(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+    state.allAttributes.map(renderCreateAttribute).mkString(", ")
+  }
+
+  def renderCreateAttribute(attr: Attribute): String = {
+//  def renderCreateAttribute(attr: Attribute[_]): String = {
+//    val attrRender = attr match {
+//      case AttrInstance.Int(_, value)     => value
+//      case AttrInstance.String(_, value)  => s"'$value'"
+//      case AttrInstance.UID(_, value)     => s"'${value.toString}'"
+//      case AttrInstance.Boolean(_, value) => value.toString
+//    }
+//
+//    s"${attr.name}: $attrRender"
+
+    s"${attr.name}: {ele.${attr.name}}"
+//    s"${attr.name}: ele.${attr.name}"
+  }
+
+  /*
+          session.writeTransaction {
+          tx =>
+            val params = Map[String, Object](
+              "ele" -> Map[String, Object](
+                "uid" -> ele.uid.toString,
+                "definition" -> ele.definition
+              ).asJava
+            ).asJava
+
+            tx.run(
+              """
+       CREATE (Instance: Class;Instance {uid: {ele.uid}, definition: {ele.definition}})
+            """, params)
+
+            tx.success()
+        }
+        session.close()
+     */
+  /*
+    val params = Map[String, Object](
+     "ele" -> Map[String, Object](
+        "uid" -> ele.uid.toString,
+        "definition" -> ele.definition
+     ).asJava
+  ).asJava
+   */
+
+
+
+//  def renderParams(params: Map[String, AnyRef]) = params.toSeq match {
+//    case (key: String, values: List[AnyRef]) =>
+//
+//    case (key: String, values: List[AnyRef]) =>
+//  }
+
+  def neo4jTx(query: String, params: String): String =
     s"""
        |val session = graph.driver.session()
        |
        |session.writeTransaction { tx =>
-       |  tx.run(\"\"\"$query\"\"\")
+       |  val params = $params
+       |
+       |  tx.run(\"\"\"$query\"\"\".stripMargin, params)
        |  tx.success()
        |}
        |session.close()
-     """.stripMargin
+       """.stripMargin
 
   def renderVersion(vertex: WithBuilders#Vertex, last: WithBuilders#VertexVersion): String =
     s"""
@@ -177,7 +259,7 @@ object GraphCrudRenderer {
   // Todo: Make all this configurable
   def render(graph: WithBuilders): String = {
     val packageName = "io.testgraph"
-    val imports = Seq[String]("java.util.UUID", "org.neo4j.driver.v1._")
+    val imports = Seq[String]("java.util.UUID", "org.neo4j.driver.v1._", "scala.collection.JavaConverters._")
 
     val neo4jGraph =
       """
@@ -208,8 +290,7 @@ object GraphCrudRenderer {
        |
        |$neo4jGraph
        |
-       |object Graph {
-       |  val graph = new Neo4jGraph("", "", "")
+       |class Graph(graph: Neo4jGraph) {
        |
        |  sealed trait CreateReadUpdate
        |  sealed trait VertexByUid extends CreateReadUpdate { val uid: UUID }

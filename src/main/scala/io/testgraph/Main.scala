@@ -2,22 +2,22 @@
 //
 //import java.util.UUID
 //
-//import io.testgraph.Graph.ArtifactDefn
-//
 //object Main {
 //
 //  def main(args: Array[String]): Unit = {
 //
-//    //val tg: ArtifactDefn.ByQuery = Graph.ArtifactDefn.ByQuery("abc")
+//    val graphClient = new Neo4jGraph("bolt://127.0.0.1:7687", "neo4j", "test")
 //
-//    val artifactDefn = Graph.ArtifactDefn.Instance(
+//    val graph = new Graph(graphClient)
+//
+//    val artifactDefn = graph.ArtifactDefn.Instance(
 //      UUID.randomUUID(),
 //      "labelA"
 //    )
 //
-//    Graph.ArtifactDefn.create(artifactDefn)
+//    graph.ArtifactDefn.create(artifactDefn)
 //
-//
+//    graphClient.close()
 //  }
 //
 //}
