@@ -3,53 +3,11 @@ package io.grafgraph.render.crud
 import io.grafdefinition.WithBuilders
 import io.grafgraph.definition.{Attr, Attribute}
 import io.grafgraph.example.Lake
-import io.grafgraph.render.crud.RenderAttribute.renderAttribute
-import io.grafgraph.render.crud.RenderEdge.renderEdgeForDao
-import io.grafgraph.render.crud.Util.indent
+import io.grafgraph.render.crud.RenderState.renderNeo4jNodePart
 
-object RenderState {
+object RenderCreateMethod {
 
-  def renderState(
-    index: Int, singleState: Boolean,
-    vertex: WithBuilders#Vertex,
-    state: WithBuilders#VertexState
-  ): String = indent(2) {
-    val interfaces: Seq[String] = vertex.clazz.map { c =>
-      c.name :: vertex.name :: s"New" :: Nil
-    }.getOrElse(
-      vertex.name :: s"New" :: Nil
-    )
-
-    val attrs = state.allAttributes.map(renderAttribute("")) ++: state.edges.map(renderEdgeForDao("")(vertex.name))
-
-    val extendsPart = interfaces match {
-      case (ls: List[String]) => s"extends ${ls.mkString(" with ")}"
-      case Nil => ""
-    }
-
-    val name = state.name
-
-    s"""
-       |case class $name(
-       |
-       |${indent(2)(attrs.mkString(",\n"))}
-       |
-       |) $extendsPart
-       |
-       |${RenderCreateMethod.renderCreateMethod(vertex, state)}
-       """.stripMargin
-  }
-
-  def renderNeo4jNodePart(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String =
-    s"(${state.name}: Class_${state.name} {${renderCypherAttributes(vertex, state)}})"
-
-//  private def renderGetNeo4jNodePartMethod(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String =
-//    s"""
-//       |def getNeo4jNodePart()
-//     """.stripMargin
-
-  /*
-  private def renderCreateMethod(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+  def renderCreateMethod(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
     val params = renderParams(vertex, state)
 
     val edges = renderEdges(vertex, state)
@@ -66,6 +24,18 @@ object RenderState {
        |def create(ele: ${state.name}): Unit = {
        |  ${renderNeo4jTx(query, params)}
        |}
+       """.stripMargin
+  }
+
+  private def renderParams(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
+    val params = state.allAttributes.map { (attr: Attribute) =>
+      s""""${attr.name}" -> ${renderParam(vertex, state, attr)}"""
+    }.mkString(",")
+
+    s"""
+       |Map[String, Object](
+       |  $params
+       |).asJava
        """.stripMargin
   }
 
@@ -103,12 +73,16 @@ object RenderState {
     }
   }
 
-*/
-
-  private def renderCypherAttributes(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
-    state.allAttributes.map(renderCypherAttribute).mkString(", ")
-  }
-
-  private def renderCypherAttribute(attr: Attribute): String = s"${attr.name}: {${attr.name}}"
-
+  private def renderNeo4jTx(query: String, params: String): String =
+    s"""
+       |val session = graph.driver.session()
+       |
+       |session.writeTransaction { tx =>
+       |  val params = $params
+       |
+       |  tx.run(\"\"\"$query\"\"\".stripMargin, params)
+       |  tx.success()
+       |}
+       |session.close()
+         """.stripMargin
 }

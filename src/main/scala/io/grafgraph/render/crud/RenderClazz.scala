@@ -9,7 +9,7 @@ object RenderClazz {
     s"""
       |sealed trait ${clazz.name} {
       |${indent(2)(clazz.attributes.map(RenderAttribute.renderAttribute("val")).mkString(",\n"))}
-      |${indent(2)(clazz.edges.map(RenderEdge.renderEdge("val")(clazz.name)).mkString(",\n"))}
+      |${indent(2)(clazz.edges.map(RenderEdge.renderEdgeForDao("val")(clazz.name)).mkString(",\n"))}
       |}
     """.stripMargin
   })
