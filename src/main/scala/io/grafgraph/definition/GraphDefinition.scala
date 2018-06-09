@@ -41,17 +41,19 @@ trait GraphDefinition {
   case class Vertex(
     name: String,
     clazz: Option[Clazz], // Rules: cannot be self, cannot be anything that causes a circular dependency
-    versions: Seq[VertexVersion]
+//    versions: Seq[VertexVersion]
+    states: Seq[VertexState]
   ) {
     // Can I tag version to its vertex? like 'self.Version'?
     //      def get(version: Version): VertexVersion = versions.find(_.version == version).get
 
-    lazy val latest: VertexVersion = versions.last
+//    lazy val latest: VertexVersion = versions.last
   }
 
   object Vertex {
-    def apply(name: String, clazz: Option[Clazz], inititalVersion: VertexVersion): Vertex =
-      Vertex(name, clazz, inititalVersion :: Nil)
+//    def apply(name: String, clazz: Option[Clazz], inititalVersion: VertexVersion): Vertex =
+    def apply(name: String, clazz: Option[Clazz], states: Seq[VertexState]): Vertex =
+      Vertex(name, clazz, states)
   }
 
   object VertexState {
@@ -74,15 +76,15 @@ trait GraphDefinition {
   }
 
   // todo: just make it a nel
-  case class VertexVersion(
-    states: NonEmptyList[VertexState]
-  ) {
-    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition :: states)
-  }
-
-  object VertexVersion {
-    def apply(defn: VertexState): VertexVersion = VertexVersion(NonEmptyList.of(defn))
-  }
+//  case class VertexVersion(
+//    states: NonEmptyList[VertexState]
+//  ) {
+//    def ::(vertexDefinition: VertexState): VertexVersion = this.copy(vertexDefinition :: states)
+//  }
+//
+//  object VertexVersion {
+//    def apply(defn: VertexState): VertexVersion = VertexVersion(NonEmptyList.of(defn))
+//  }
 
   sealed trait Edge {
     val name: String

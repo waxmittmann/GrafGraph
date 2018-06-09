@@ -32,24 +32,29 @@ trait WithBuilders extends GraphDefinition {
   case class VertexBuilder2(
     name: String,
     clazz: Option[Clazz],
-    versions: Seq[VertexVersion] = Seq.empty
+//    versions: Seq[VertexVersion] = Seq.empty
+    states: Seq[VertexState] = Seq.empty
   ) {
-    def version: VersionBuilder = VersionBuilder(this, Seq.empty)
+//    def version: VersionBuilder = VersionBuilder(this, Seq.empty)
+    def state(stateName: String): StateBuilder =
+      StateBuilder(this, stateName, Seq.empty, Seq.empty)
 
-    def done: Vertex = Vertex(name, clazz, versions)
+//    def done: Vertex = Vertex(name, clazz, versions)
+    def done: Vertex = Vertex(name, clazz, states)
   }
-  case class VersionBuilder(parent: VertexBuilder2, definitions: Seq[VertexState]) {
-
-    def state(name: String) = StateBuilder(this, name, Seq.empty, Seq.empty)
-
-    def singleState = StateBuilder(this, "Instance", Seq.empty, Seq.empty) // todo: something to ensure they don't add more states
-
-    def withState(defn: VertexState): VersionBuilder =
-      this.copy(definitions = defn +: definitions)
-  }
+//
+//  case class VersionBuilder(parent: VertexBuilder2, definitions: Seq[VertexState]) {
+//
+//    def state(name: String) = StateBuilder(this, name, Seq.empty, Seq.empty)
+//
+//    def singleState = StateBuilder(this, "Instance", Seq.empty, Seq.empty) // todo: something to ensure they don't add more states
+//
+//    def withState(defn: VertexState): VersionBuilder =
+//      this.copy(definitions = defn +: definitions)
+//  }
 
   case class StateBuilder(
-    parent: VersionBuilder,
+    parent: VertexBuilder2,
     name: String,
     edges: Seq[Edge],
     attributes: Seq[Attribute]
@@ -73,24 +78,28 @@ trait WithBuilders extends GraphDefinition {
 
     def attribute(attribute: Attribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
-    def state(newName: String): StateBuilder = parent.copy().withState(VertexState(name, edges, attributes)).state(newName)
+    def state(newName: String): StateBuilder = {
+      val newP = parent.copy(states = VertexState(name, edges, attributes) +: parent.states)
 
-    def version: VersionBuilder = {
-      val grandparent = parent.parent
-
-      val thisDefn: VertexState = VertexState(name, edges, attributes)
-      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
-
-      VersionBuilder(grandparent.copy(versions = thisVertexVersion +: grandparent.versions), Seq.empty)
-    }
+      StateBuilder(newP, newName, Seq.empty, Seq.empty)
+    }//.state(newName)
 
     def done: Vertex = {
-      val grandparent = parent.parent
+//      val grandparent = parent.parent
 
       val thisDefn = VertexState(name, edges, attributes)
-      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
+//      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
-      grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done
+      parent.copy(states = thisDefn +: parent.states)
+
+
+      Vertex(
+        name,
+        None, // Hmm?
+        thisDefn +: parent.states
+      )
+
+      //grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done
     }
   }
 }
