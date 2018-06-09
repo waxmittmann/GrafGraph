@@ -93,11 +93,11 @@ trait WithBuilders extends GraphDefinition {
       parent.copy(states = thisDefn +: parent.states)
 
 
-      Vertex(
-        name,
-        None, // Hmm?
-        thisDefn +: parent.states
-      )
+//      Vertex(
+//        name,
+//        None, // Hmm?
+//        thisDefn +: parent.states
+//      )
 
       //grandparent.copy(versions = thisVertexVersion +: grandparent.versions).done
     }
