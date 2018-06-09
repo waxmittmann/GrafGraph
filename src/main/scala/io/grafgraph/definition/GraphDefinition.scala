@@ -50,11 +50,11 @@ trait GraphDefinition {
 //    lazy val latest: VertexVersion = versions.last
   }
 
-  object Vertex {
+//  object Vertex {
 //    def apply(name: String, clazz: Option[Clazz], inititalVersion: VertexVersion): Vertex =
-    def apply(name: String, clazz: Option[Clazz], states: Seq[VertexState]): Vertex =
-      Vertex(name, clazz, states)
-  }
+//    def apply(name: String, clazz: Option[Clazz], states: Seq[VertexState]): Vertex =
+//      Vertex(name, clazz, states)
+//  }
 
   object VertexState {
     def apply(
