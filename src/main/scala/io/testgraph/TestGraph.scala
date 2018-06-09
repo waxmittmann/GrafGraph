@@ -32,7 +32,6 @@ class Graph(graph: Neo4jGraph) {
 
   object ArtifactDefn {
     sealed trait ArtifactDefn
-
     case class ByUid(uid: UUID) extends VertexByUid with ArtifactDefn
     case class ByQuery(query: String) extends VertexByQuery with ArtifactDefn
     sealed trait New extends VertexNew[ArtifactDefn]
@@ -57,9 +56,9 @@ class Graph(graph: Neo4jGraph) {
             ).asJava
 
           tx.run("""
-     CREATE (Instance: Class_Instance {uid: {uid}, label: {label}})
-     
-            """.stripMargin,
+    CREATE (Instance: Class_Instance {uid: {uid}, label: {label}})
+    
+           """.stripMargin,
                  params)
           tx.success()
       }
@@ -72,7 +71,6 @@ class Graph(graph: Neo4jGraph) {
 
   object WorkflowArtifact {
     sealed trait WorkflowArtifact
-
     case class ByUid(uid: UUID) extends VertexByUid with WorkflowArtifact
     case class ByQuery(query: String)
         extends VertexByQuery
@@ -101,9 +99,9 @@ class Graph(graph: Neo4jGraph) {
             ).asJava
 
           tx.run("""
-     CREATE (Exists: Class_Exists {uid: {uid}, exists: {exists}})
-     ???
-            """.stripMargin,
+    CREATE (Exists: Class_Exists {uid: {uid}, exists: {exists}})
+    ???
+           """.stripMargin,
                  params)
           tx.success()
       }
@@ -134,9 +132,9 @@ class Graph(graph: Neo4jGraph) {
 
           tx.run(
             """
-     CREATE (Placeholder: Class_Placeholder {uid: {uid}, exists: {exists}})
-     ???
-            """.stripMargin,
+    CREATE (Placeholder: Class_Placeholder {uid: {uid}, exists: {exists}})
+    ???
+           """.stripMargin,
             params)
           tx.success()
       }
@@ -149,19 +147,18 @@ class Graph(graph: Neo4jGraph) {
 
   object WorkflowDefn {
     sealed trait WorkflowDefn
-
     case class ByUid(uid: UUID) extends VertexByUid with WorkflowDefn
     case class ByQuery(query: String) extends VertexByQuery with WorkflowDefn
     sealed trait New extends VertexNew[WorkflowDefn]
 
-    case class Instance(
+    case class Std(
         uid: UUID,
         definition: String,
         artifactDefinition: ArtifactDefn.ArtifactDefn
     ) extends WorkflowDefn
         with New
 
-    def create(ele: Instance): Unit = {
+    def create(ele: Std): Unit = {
 
       val session = graph.driver.session()
 
@@ -174,12 +171,11 @@ class Graph(graph: Neo4jGraph) {
               "definition" -> ele.definition
             ).asJava
 
-          tx.run(
-            """
-     CREATE (Instance: Class_Instance {uid: {uid}, definition: {definition}})
-     ???
-            """.stripMargin,
-            params)
+          tx.run("""
+    CREATE (Std: Class_Std {uid: {uid}, definition: {definition}})
+    ???
+           """.stripMargin,
+                 params)
           tx.success()
       }
       session.close()
@@ -191,7 +187,6 @@ class Graph(graph: Neo4jGraph) {
 
   object WorkflowInstance {
     sealed trait WorkflowInstance
-
     case class ByUid(uid: UUID) extends VertexByUid with WorkflowInstance
     case class ByQuery(query: String)
         extends VertexByQuery
@@ -223,18 +218,15 @@ class Graph(graph: Neo4jGraph) {
 
           tx.run(
             """
-     MATCH (a: A {uid: {a.uid}}
-     CREATE (complete: Class_Complete {uid: {uid}, status: {status}, jobUid: {jobUid}})
-     (complete)->(a)
-     (complete)->(b: B {uid: {b.uid}, some: {b.some}}
-       (b)->(c: C {uid: {b.c.uid}, other: {b.c.other} )
-       UNROLL b.ds AS b_d
-       (b)->(d: D {uid: {b_d.uid}, other: {b_d.other} )
-            """.stripMargin,
+    CREATE (Complete: Class_Complete {uid: {uid}, status: {status}, jobUid: {jobUid}})
+    ???
+    ???
+           """.stripMargin,
             params)
           tx.success()
       }
       session.close()
+
     }
 
     case class Running(
@@ -262,10 +254,10 @@ class Graph(graph: Neo4jGraph) {
 
           tx.run(
             """
-     CREATE (Running: Class_Running {uid: {uid}, status: {status}, jobUid: {jobUid}})
-     ???
-     ???
-            """.stripMargin,
+    CREATE (Running: Class_Running {uid: {uid}, status: {status}, jobUid: {jobUid}})
+    ???
+    ???
+           """.stripMargin,
             params)
           tx.success()
       }

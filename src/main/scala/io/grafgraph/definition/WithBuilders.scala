@@ -90,8 +90,7 @@ trait WithBuilders extends GraphDefinition {
       val thisDefn = VertexState(name, edges, attributes)
 //      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
-      parent.copy(states = thisDefn +: parent.states)
-
+      parent.copy(states = thisDefn +: parent.states).done
 
 //      Vertex(
 //        name,
