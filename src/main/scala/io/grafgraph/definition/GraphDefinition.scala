@@ -42,8 +42,12 @@ trait GraphDefinition {
     name: String,
     clazz: Option[Clazz], // Rules: cannot be self, cannot be anything that causes a circular dependency
 //    versions: Seq[VertexVersion]
-    states: Seq[VertexState]
+    states: Seq[VertexState] = Seq.empty
   ) {
+
+    def addState(partial: PartialVertexState): Vertex =
+      this.copy(states = partial.done(this) +: states)
+
     // Can I tag version to its vertex? like 'self.Version'?
     //      def get(version: Version): VertexVersion = versions.find(_.version == version).get
 
@@ -63,17 +67,28 @@ trait GraphDefinition {
       edges: Seq[Edge],
       attributes: Seq[Attribute]
     ): VertexState = {
-      new VertexState(name, edges, attributes)
+      new VertexState(parent, name, edges, attributes)
     }
   }
 
   // todo: case class ok?
   case class VertexState private(
+    parent: Vertex,
     name: String,
     edges: Seq[Edge],
     instanceAttributes: Seq[Attribute]
   ) {
     def allAttributes: Seq[Attribute] = GlobalAttributes ++ instanceAttributes
+  }
+
+  case class PartialVertexState(
+    name: String,
+    edges: Seq[Edge],
+    instanceAttributes: Seq[Attribute]
+  ) {
+    def allAttributes: Seq[Attribute] = GlobalAttributes ++ instanceAttributes
+
+    def done(v: Vertex) = VertexState(v, name, edges, instanceAttributes)
   }
 
   // todo: just make it a nel
@@ -95,12 +110,13 @@ trait GraphDefinition {
 
   case class OtherEdge(
     name: String,
-    to: Vertex,
+    to: VertexState,
     optional: Boolean = false,
     toMany: Boolean = false,
     attribute: Seq[Attribute] = Seq.empty
   ) extends Edge
 
+  // tODO: REMOVE FOR NOW
   case class SelfEdge(
     name: String,
     attribute: Seq[Attribute],

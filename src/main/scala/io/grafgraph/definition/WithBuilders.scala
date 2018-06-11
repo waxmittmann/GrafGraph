@@ -33,14 +33,18 @@ trait WithBuilders extends GraphDefinition {
     name: String,
     clazz: Option[Clazz],
 //    versions: Seq[VertexVersion] = Seq.empty
-    states: Seq[VertexState] = Seq.empty
+    states: Seq[PartialVertexState] = Seq.empty
   ) {
 //    def version: VersionBuilder = VersionBuilder(this, Seq.empty)
     def state(stateName: String): StateBuilder =
       StateBuilder(this, stateName, Seq.empty, Seq.empty)
 
 //    def done: Vertex = Vertex(name, clazz, versions)
-    def done: Vertex = Vertex(name, clazz, states)
+    def done: Vertex = {
+      states.foldLeft(Vertex(name, clazz)) { case (v, vs) => v.addState(vs) }
+//      lazy val v = Vertex(name, clazz, states.map((s: PartialVertexState) => s.done(v)))
+//      v
+    }
   }
 //
 //  case class VersionBuilder(parent: VertexBuilder2, definitions: Seq[VertexState]) {
@@ -61,7 +65,7 @@ trait WithBuilders extends GraphDefinition {
   ) {
     def otherEdge(
       name: String,
-      to: Vertex,
+      to: VertexState,
       attributes: Seq[Attribute] = Seq.empty,
       toMany: Boolean = false,
       optional: Boolean = false
@@ -79,7 +83,7 @@ trait WithBuilders extends GraphDefinition {
     def attribute(attribute: Attribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 
     def state(newName: String): StateBuilder = {
-      val newP = parent.copy(states = VertexState(name, edges, attributes) +: parent.states)
+      val newP = parent.copy(states = PartialVertexState(name, edges, attributes) +: parent.states)
 
       StateBuilder(newP, newName, Seq.empty, Seq.empty)
     }//.state(newName)
@@ -87,7 +91,7 @@ trait WithBuilders extends GraphDefinition {
     def done: Vertex = {
 //      val grandparent = parent.parent
 
-      val thisDefn = VertexState(name, edges, attributes)
+      val thisDefn = PartialVertexState(name, edges, attributes)
 //      val thisVertexVersion = VertexVersion(NonEmptyList.of(thisDefn, parent.definitions:_*))
 
       parent.copy(states = thisDefn +: parent.states).done

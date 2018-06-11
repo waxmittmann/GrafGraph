@@ -39,7 +39,7 @@ object Renderers {
 
 
   def main(args: Array[String]): Unit = {
-    println(Lake.workflowInstance.states.map(rootRenderer).mkString("----\n"))
+    println(Lake.workflowInstance.states.map(rootRenderer).map(_.statement).mkString("----\n"))
   }
 
 
@@ -52,20 +52,22 @@ object Renderers {
 
   /* Root renderer */
   def rootRenderer(`this`: VertexState): RenderedOutput[String] = {
+    val renderedEdges: Seq[RenderedOutput[String]] = `this`.edges.flatMap { e =>
+      renderers.map { r =>
+        e match {
+          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
+
+          case SelfEdge(name, attribute, optional, toMany) => ???
+        }
+      }
+    }
+
     RenderedOutput(
       s"""
         |CREATE ${renderFullVertexState(`this`)}
-        ${ `this`.edges.map { e =>
-          renderers.map { r =>
-            e match {
-              case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
-
-              case SelfEdge(name, attribute, optional, toMany) => ???
-            }
-          }
-        }}
+        ${renderedEdges.map(_.statement)}
         |RETURN ${scriptName(`this`)}
-      """
+      """.stripMargin
     )
   }
 
@@ -76,7 +78,7 @@ object Renderers {
        |MATCH (${scriptName(`this`)} :${labels(`this`)} { uid: $$${scriptName(`this`)}Uid })
        |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
        |RETURN ${scriptName(parent)}
-      """
+      """.stripMargin
     )
   }
 
@@ -86,27 +88,31 @@ object Renderers {
       |MATCH (${scriptName(`this`)} :${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute).mkString(",")} } )
       |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
       |RETURN ${scriptName(parent)}
-      """
+      """.stripMargin
     )
   }
 
   def createRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge): RenderedOutput[String] = {
   //CREATE (${this.scriptName} :${this.allLabels} { ${this.attributes.map(renderAttribute) } } )
+
+    val renderedEdges: Seq[RenderedOutput[String]] = `this`.edges.flatMap { e =>
+      renderers.map { r =>
+        e match {
+          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
+
+          case SelfEdge(name, attribute, optional, toMany) => ???
+        }
+      }
+    }
+
+
     RenderedOutput(
       s"""
       |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`)})
       |UNWIND ${scriptName(parent)}.${scriptName(`this`)}List AS ${scriptName(`this`)}
-      ${ `this`.edges.map { e =>
-        renderers.map { r =>
-          e match {
-            case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
-
-            case SelfEdge(name, attribute, optional, toMany) => ???
-          }
-        }
-      }}
+      ${renderedEdges.map(_.statement)}
       |RETURN ${scriptName(parent)}
-      """
+      """.stripMargin
     )
   }
 
