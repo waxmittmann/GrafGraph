@@ -46,10 +46,11 @@ object Renderers {
 
   /* Vertex state 'show's */
   def scriptName(v: VertexState): String = v.name.toLowerCase
+  def dataName(v: VertexState): String = s"${v.name.toLowerCase}Data"
 
   def labels(v: VertexState): String = s":${v.name.toUpperCase} :${v.parent.name.toUpperCase}"
 
-  def renderAttribute(`this`: VertexState)(attr: Attribute): String = s"${attr.name}: ${scriptName(`this`)}.${attr.name}"
+  def renderAttribute(`this`: VertexState)(attr: Attribute): String = s"${attr.name}: ${dataName(`this`)}.${attr.name}"
 
   /* Root renderer */
   def rootRenderer(`this`: VertexState): RenderedOutput[String] = {
@@ -65,6 +66,7 @@ object Renderers {
 
     RenderedOutput(
       s"""
+        |WITH $$root AS ${dataName(`this`)}
         |CREATE ${renderFullVertexState(`this`, "")}
         |WITH ${scriptName(`this`)}
         ${renderedEdges.map(_.statement).mkString("\n")}
@@ -78,7 +80,7 @@ object Renderers {
     RenderedOutput(indentWith(indent,
       s"""
        |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByUidList AS ${scriptName(`this`)}
-       |MATCH (${scriptName(`this`)} ${labels(`this`)} { uid: ${scriptName(`this`)}.uid })
+       |MATCH (${scriptName(`this`)} ${labels(`this`)} { uid: ${dataName(`this`)}.uid })
        |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
        |WITH ${scriptName(parent)}
       """.stripMargin
@@ -88,7 +90,7 @@ object Renderers {
   def matchByAttributesRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
     RenderedOutput(indentWith(indent,
       s"""
-      |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByAttributesList AS ${scriptName(`this`)}
+      |UNWIND ${dataName(parent)}.${dataName(`this`)}ByAttributesList AS ${dataName(`this`)}
       |MATCH (${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )
       |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
       |WITH ${scriptName(parent)}
@@ -102,6 +104,7 @@ object Renderers {
     val renderedEdges: Seq[RenderedOutput[String]] = `this`.edges.flatMap { e =>
       renderers.map { r =>
         e match {
+          // Todo: for non-toMany edges, don't use unwind
           case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)(indent + "  ")
 
           case SelfEdge(name, attribute, optional, toMany) => ???
@@ -121,7 +124,7 @@ object Renderers {
 
     RenderedOutput(indentWith(indent,
       s"""
-         |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByCreateList AS ${scriptName(`this`)}
+         |UNWIND ${dataName(parent)}.${dataName(`this`)}ByCreateList AS ${dataName(`this`)}
          |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
          |WITH ${scriptName(parent)}, ${scriptName(`this`)}
          ${renderedEdges.map(_.statement).mkString("\n")}
