@@ -34,12 +34,13 @@ case class RenderedOutput[S](
 
 object Renderers {
 //  val renderers: Seq[Vertex => (Vertex => (Edge => RenderedOutput[String]))] =
-  val renderers: Seq[VertexState => VertexState => Edge => RenderedOutput[String]] =
+  val renderers: Seq[VertexState => VertexState => Edge => String => RenderedOutput[String]] =
     Seq(matchByUidRenderer _, matchByAttributesRenderer _, createRenderer _)
 
 
   def main(args: Array[String]): Unit = {
-    println(Lake.workflowInstance.states.map(rootRenderer).map(_.statement).mkString("----\n"))
+//    println(Lake.workflowInstance.states.map(rootRenderer).map(_.statement).mkString("----\n"))
+    println(rootRenderer(Lake.workflowInstance.states.head).statement)
   }
 
 
@@ -48,14 +49,14 @@ object Renderers {
 
   def labels(v: VertexState): String = s":${v.name.toUpperCase} :${v.parent.name.toUpperCase}"
 
-  def renderAttribute(attr: Attribute): String = s"${attr.name}: ${attr.name}"
+  def renderAttribute(`this`: VertexState)(attr: Attribute): String = s"${attr.name}: ${scriptName(`this`)}.${attr.name}"
 
   /* Root renderer */
   def rootRenderer(`this`: VertexState): RenderedOutput[String] = {
     val renderedEdges: Seq[RenderedOutput[String]] = `this`.edges.flatMap { e =>
       renderers.map { r =>
         e match {
-          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
+          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)("  ")
 
           case SelfEdge(name, attribute, optional, toMany) => ???
         }
@@ -64,60 +65,63 @@ object Renderers {
 
     RenderedOutput(
       s"""
-        |CREATE ${renderFullVertexState(`this`)}
-        ${renderedEdges.map(_.statement)}
+        |CREATE ${renderFullVertexState(`this`, "")}
+        |WITH ${scriptName(`this`)}
+        ${renderedEdges.map(_.statement).mkString("\n")}
         |RETURN ${scriptName(`this`)}
       """.stripMargin
     )
   }
 
   /* Renderers */
-  def matchByUidRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge): RenderedOutput[String] = {
-    RenderedOutput(
+  def matchByUidRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
+    RenderedOutput(indentWith(indent,
       s"""
-       |MATCH (${scriptName(`this`)} :${labels(`this`)} { uid: $$${scriptName(`this`)}Uid })
+       |MATCH (${scriptName(`this`)} ${labels(`this`)} { uid: ${scriptName(`this`)}.uid })
        |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
-       |RETURN ${scriptName(parent)}
+       |WITH ${scriptName(parent)}
       """.stripMargin
-    )
+    ))
   }
 
-  def matchByAttributesRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge): RenderedOutput[String] = {
-    RenderedOutput(
+  def matchByAttributesRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
+    RenderedOutput(indentWith(indent,
       s"""
-      |MATCH (${scriptName(`this`)} :${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute).mkString(",")} } )
+      |MATCH (${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )
       |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
-      |RETURN ${scriptName(parent)}
+      |WITH ${scriptName(parent)}
       """.stripMargin
-    )
+    ))
   }
 
-  def createRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge): RenderedOutput[String] = {
+  def createRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
   //CREATE (${this.scriptName} :${this.allLabels} { ${this.attributes.map(renderAttribute) } } )
 
     val renderedEdges: Seq[RenderedOutput[String]] = `this`.edges.flatMap { e =>
       renderers.map { r =>
         e match {
-          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)
+          case OtherEdge(name, to, optional, toMany, attribute) => r(to)(`this`)(e)(indent + "  ")
 
           case SelfEdge(name, attribute, optional, toMany) => ???
         }
       }
     }
 
-
-    RenderedOutput(
+    RenderedOutput(indentWith(indent,
       s"""
-      |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`)})
+      |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
       |UNWIND ${scriptName(parent)}.${scriptName(`this`)}List AS ${scriptName(`this`)}
-      ${renderedEdges.map(_.statement)}
-      |RETURN ${scriptName(parent)}
+      ${renderedEdges.map(_.statement).mkString("\n")}
+      |WITH ${scriptName(parent)}
       """.stripMargin
-    )
+    ))
   }
 
   /* Helpers */
-  def renderFullVertexState (`this`: VertexState) =
-    s"""(${scriptName(`this`)} :${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute).mkString(",")} } )"""
+  def renderFullVertexState(`this`: VertexState, indent: String) =
+    s"""$indent(${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )"""
 
+
+  def indentWith(indent: String, text: String): String =
+    text.lines.map { line => s"$indent$line"}.mkString("\n")
 }
