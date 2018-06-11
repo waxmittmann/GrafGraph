@@ -27,7 +27,7 @@ object RenderVertex {
            |  sealed trait ${vertex.name}
            |  case class ByUid(uid: UUID) extends VertexByUid with ${vertex.name}
            |  case class ByQuery(query: String) extends VertexByQuery with ${vertex.name}
-           |  sealed trait New extends VertexNew[${vertex.name}]
+           |  sealed trait ByShape extends VertexNew[${vertex.name}]
            |
            |${
             indent(2)(vertex.states.zipWithIndex.map { case (state, index) =>

@@ -36,8 +36,8 @@ object RenderCreateMethod2 {
 
     val query =
       s"""
-         ||CREATE ${renderNeo4jNodePart(vertex, state)}
-         ||$edges
+         |CREATE ${renderNeo4jNodePart(vertex, state)}
+         |$edges
        """.stripMargin
 
     // Todo: Return object

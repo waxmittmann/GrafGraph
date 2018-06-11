@@ -58,6 +58,7 @@ trait GraphDefinition {
 
   object VertexState {
     def apply(
+      parent: Vertex,
       name: String,
       edges: Seq[Edge],
       attributes: Seq[Attribute]
