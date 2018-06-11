@@ -77,6 +77,7 @@ object Renderers {
   def matchByUidRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
     RenderedOutput(indentWith(indent,
       s"""
+       |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByUidList AS ${scriptName(`this`)}
        |MATCH (${scriptName(`this`)} ${labels(`this`)} { uid: ${scriptName(`this`)}.uid })
        |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
        |WITH ${scriptName(parent)}
@@ -87,6 +88,7 @@ object Renderers {
   def matchByAttributesRenderer(`this`: VertexState)(parent: VertexState)(edge: Edge)(indent: String): RenderedOutput[String] = {
     RenderedOutput(indentWith(indent,
       s"""
+      |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByAttributesList AS ${scriptName(`this`)}
       |MATCH (${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )
       |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${scriptName(`this`)})
       |WITH ${scriptName(parent)}
@@ -107,14 +109,25 @@ object Renderers {
       }
     }
 
+//    RenderedOutput(indentWith(indent,
+//      s"""
+//      |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByCreateList AS ${scriptName(`this`)}
+//      |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
+//      |UNWIND ${scriptName(parent)}.${scriptName(`this`)}List AS ${scriptName(`this`)}
+//      ${renderedEdges.map(_.statement).mkString("\n")}
+//      |WITH ${scriptName(parent)}
+//      """.stripMargin
+//    ))
+
     RenderedOutput(indentWith(indent,
       s"""
-      |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
-      |UNWIND ${scriptName(parent)}.${scriptName(`this`)}List AS ${scriptName(`this`)}
-      ${renderedEdges.map(_.statement).mkString("\n")}
-      |WITH ${scriptName(parent)}
+         |UNWIND ${scriptName(parent)}.${scriptName(`this`)}ByCreateList AS ${scriptName(`this`)}
+         |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
+         |WITH ${scriptName(parent)}, ${scriptName(`this`)}
+         ${renderedEdges.map(_.statement).mkString("\n")}
       """.stripMargin
     ))
+
   }
 
   /* Helpers */
