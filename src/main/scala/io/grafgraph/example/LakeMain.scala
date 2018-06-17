@@ -12,11 +12,11 @@ object LakeMain {
     println(new File(".").getAbsolutePath)
     println(new File("./src/main/scala/io/testgraph").getAbsolutePath)
     println(new File("./src/main/scala/io/testgraph").exists())
-    println("Rendered:\n" + GraphCrudRenderer.render(Lake))
+    println("Rendered:\n" + GraphCrudRenderer.render(Simple))
 
     Files.write(
       Paths.get("./src/main/scala/io/testgraph/TestGraph.scala"),
-      GraphCrudRenderer.render(Lake).getBytes,
+      GraphCrudRenderer.render(Simple).getBytes,
       StandardOpenOption.CREATE
     )
   }

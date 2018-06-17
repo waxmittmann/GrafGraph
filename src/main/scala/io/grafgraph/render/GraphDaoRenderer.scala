@@ -2,7 +2,7 @@ package io.grafgraph.render
 
 //import io.grafgraph.example.Lake.graph
 import io.grafgraph.definition.{Attr, Attribute, GraphDefinition}
-import io.grafgraph.example.Lake
+import io.grafgraph.example.Simple
 
 // Couldn't use type projection because I want to match on some case classes, and it won't let me based on the type
 // projection, nor on a `type X = Y#Z` style thing.
@@ -16,12 +16,12 @@ object GraphDaoRenderer {
     def write(str: String): Writer = WriterImpl(str +: cur)
   }
 
-  def write(writer: Writer)(definitions: Seq[Lake.Vertex]): Writer = {
+  def write(writer: Writer)(definitions: Seq[Simple.Vertex]): Writer = {
     // Create trait that everything will belong to, with these as vars (or empty)
     // graph.GlobalAttributes
 
     val graphElement = s"""sealed trait GraphElement {
-       |${Lake.GlobalAttributes.map(writeAttributeToTrait).map(s => s"  $s\n").mkString}
+       |${Simple.GlobalAttributes.map(writeAttributeToTrait).map(s => s"  $s\n").mkString}
        |}
      """.stripMargin
 
@@ -35,11 +35,11 @@ object GraphDaoRenderer {
     result.write("}")
   }
 
-  def write(definitions: Seq[Lake.Vertex]): WriterImpl = write(WriterImpl())(definitions).asInstanceOf[WriterImpl]
+  def write(definitions: Seq[Simple.Vertex]): WriterImpl = write(WriterImpl())(definitions).asInstanceOf[WriterImpl]
 
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
-  def writeEdge(self: Lake.Vertex, e: Lake.Edge): String = {
+  def writeEdge(self: Simple.Vertex, e: Simple.Edge): String = {
     // Ignore attribute for now
     // don't do optional; use toMany for that
     if (e.toMany) {
@@ -50,8 +50,8 @@ object GraphDaoRenderer {
   }
 
   def writeAllowedDefinition(
-    vertex: Lake.Vertex,
-    allowedDefinition: Lake.VertexState,
+    vertex: Simple.Vertex,
+    allowedDefinition: Simple.VertexState,
     index: Option[String] = None
   ): String = {
     s"""
@@ -84,14 +84,14 @@ object GraphDaoRenderer {
     s"val ${attr.name}: ${attrType(attr)}${attrValue(attr)}"
   }
 
-  def writeDefinition(vertex: Lake.Vertex): String = {
+  def writeDefinition(vertex: Simple.Vertex): String = {
 
     if (vertex.states.length == 1) {
       val defn = vertex.states.head
       writeAllowedDefinition(vertex, defn)
     } else {
       s"sealed trait ${vertex.name}" +
-        vertex.states.zipWithIndex.map { case (allowedDefinition: Lake.VertexState, index: Int) =>
+        vertex.states.zipWithIndex.map { case (allowedDefinition: Simple.VertexState, index: Int) =>
           writeAllowedDefinition(vertex, allowedDefinition, Some(allowedDefinition.name))
         }.toList.mkString("\n\n")
     }

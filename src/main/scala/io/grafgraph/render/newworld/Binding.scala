@@ -2,9 +2,9 @@ package io.grafgraph.render.newworld
 
 //import cats.syntax._
 import io.grafdefinition.WithBuilders
-import io.grafgraph.definition.Attribute
-import io.grafgraph.example.Lake
-import io.grafgraph.example.Lake._
+import io.grafgraph.definition.{Attribute, GraphDefinition}
+//import io.grafgraph.example.Lake
+//import io.grafgraph.example.Lake._
 //import cats.syntax.semigroup._
 
 import cats.instances.all._
@@ -52,6 +52,10 @@ object RenderedOutput {
 //}
 
 object Renderers {
+  type VertexState = GraphDefinition#VertexState
+  type Vertex = GraphDefinition#Vertex
+  type Edge = GraphDefinition#Edge
+
   implicit val rom: Monoid[RenderedOutput] = new Monoid[RenderedOutput] {
     override def empty: RenderedOutput = RenderedOutput(List.empty[String], Map.empty[String, Binding])
 
@@ -74,7 +78,8 @@ object Renderers {
 
   def main(args: Array[String]): Unit = {
 //    println(Lake.workflowInstance.states.map(rootRenderer).map(_.statement).mkString("----\n"))
-    println(rootRenderer(Lake.workflowInstance.states.head).statement.mkString("\n"))
+//    println(rootRenderer(io.grafgraph.example.Lake.workflowInstance.states.head).statement.mkString("\n"))
+    println(rootRenderer(io.grafgraph.example.Simple.aDefn.states.head).statement.mkString("\n"))
   }
 
 
@@ -91,8 +96,8 @@ object Renderers {
 //    linePrefix
   }
 
-  def scriptName(v: VertexState): String = v.name.toLowerCase
-  def dataName(v: VertexState): String = s"${v.name.toLowerCase}Data"
+  def scriptName(v: VertexState): String = s"${v.parent.name}_${v.name.toLowerCase}"
+  def dataName(v: VertexState): String = s"${scriptName(v)}Data"
   def labels(v: VertexState): String = s":${v.name.toUpperCase} :${v.parent.name.toUpperCase}"
   def renderAttribute(`this`: VertexState)(attr: Attribute): String = s"${attr.name}: ${dataName(`this`)}.${attr.name}"
   def getParent(ancestors: Seq[VertexState]): VertexState = ancestors.last
@@ -182,14 +187,26 @@ object Renderers {
 //      """.stripMargin
 //    ))
 
-    RenderedOutput(indentWith(s"$prefix$indent",
-      s"""
-         |UNWIND ${dataName(parent)}.${dataName(`this`)}ByCreateList AS ${dataName(`this`)}
-         |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
-         |WITH ${s"${ancestors.map(scriptName).mkString(",")}, ${scriptName(`this`)}"}
-         ${renderedEdges.map(_.statement).mkString("\n")}
-      """.stripMargin
-    ))
+//    RenderedOutput(indentWith(s"$prefix$indent",
+//      s"""
+//         |UNWIND ${dataName(parent)}.${dataName(`this`)}ByCreateList AS ${dataName(`this`)}
+//         |CREATE (${scriptName(parent)}) -[:${edge.name}]-> (${renderFullVertexState(`this`, "")})
+//         |WITH ${s"${ancestors.map(scriptName).mkString(",")}, ${scriptName(`this`)}"}
+//         ${renderedEdges.map(_.statement).mkString("\n")}
+//      """.stripMargin
+//    ))
+
+    rom.combineAll(
+      Seq(RenderedOutput(indentWith(s"$prefix$indent",
+        s"""
+           |UNWIND ${dataName(parent)}.${dataName(`this`)}ByCreateList AS ${dataName(`this`)}
+           |CREATE (${scriptName(parent)}) -[:${edge.name}]-> ${renderFullVertexState(`this`, "")}
+           |WITH ${s"${ancestors.map(scriptName).mkString(",")}, ${scriptName(`this`)}"}
+        """.stripMargin
+      ))) ++ renderedEdges
+    )
+
+
 
     //WITH ${scriptName(parent)}, ${scriptName(`this`)}
     //WITH ${s"ancestors.map(scriptName).mkString(","), ${scriptName(`this`)"}

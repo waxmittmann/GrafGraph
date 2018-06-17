@@ -18,7 +18,7 @@ object Lake extends WithBuilders {
         .attribute(Attr.String("label"))
       .done
 
-    val artifact: Lake.Vertex =
+    val artifact: Vertex =
 //      vertex("Artifact")
       (v("WorkflowArtifact") extendz artifactClazzDefn)
         .state("Placeholder")
@@ -29,14 +29,14 @@ object Lake extends WithBuilders {
           .attribute(boolean("exists", true))
       .done
 
-    val workflowDefinition: Lake.Vertex =
+    val workflowDefinition: Vertex =
       vertex("WorkflowDefn")
       .state("Instance")
         .edge("artifactDefinition", artifactDefn.states.head, toMany = true)
         .attribute(Attr.String("definition"))
       .done
 
-    val workflowInstance: Lake.Vertex =
+    val workflowInstance: Vertex =
       vertex("WorkflowInstance")
         .state("Running")
           .edge("output", artifact.states.head, toMany = true)
@@ -51,9 +51,9 @@ object Lake extends WithBuilders {
       .done
 
   // Not great
-  val allVertices: List[Lake.Vertex] =
+  val allVertices: List[Vertex] =
     artifactDefn :: artifact :: workflowDefinition :: workflowInstance :: Nil
 
-  val allClazzez: List[Lake.Clazz] =
+  val allClazzez: List[Clazz] =
     artifactClazzDefn :: Nil
 }

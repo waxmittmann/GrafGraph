@@ -2,7 +2,7 @@ package io.grafgraph.render.crud
 
 import io.grafdefinition.WithBuilders
 import io.grafgraph.definition.{Attr, Attribute}
-import io.grafgraph.example.Lake
+import io.grafgraph.example.Simple
 import io.grafgraph.render.crud.RenderState.renderNeo4jNodePart
 
 object RenderCreateMethod {
