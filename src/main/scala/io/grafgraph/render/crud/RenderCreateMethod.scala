@@ -65,13 +65,7 @@ object RenderCreateMethod {
   def renderEdgeHere(
     vertex: WithBuilders#Vertex,
     state: WithBuilders#VertexState
-  )(edge: WithBuilders#Edge): String = {
-    edge match {
-      case Lake.OtherEdge(name, to, optional, toMany, attribute) => "???"
-
-      case Lake.SelfEdge(name, attribute, optional, toMany) => "???"
-    }
-  }
+  )(edge: WithBuilders#Edge): String = ???
 
   private def renderNeo4jTx(query: String, params: String): String =
     s"""

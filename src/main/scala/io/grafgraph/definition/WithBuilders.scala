@@ -63,22 +63,22 @@ trait WithBuilders extends GraphDefinition {
     edges: Seq[Edge],
     attributes: Seq[Attribute]
   ) {
-    def otherEdge(
+    def edge(
       name: String,
       to: VertexState,
       attributes: Seq[Attribute] = Seq.empty,
       toMany: Boolean = false,
       optional: Boolean = false
     ): StateBuilder =
-      this.copy(edges = OtherEdge(name, to, toMany, optional, attributes) +: edges)
+      this.copy(edges = Edge(name, to, toMany, optional, attributes) +: edges)
 
-    def selfEdge(
-      name: String,
-      attributes: Seq[Attribute] = Seq.empty,
-      toMany: Boolean = false,
-      optional: Boolean = false
-    ): StateBuilder =
-      this.copy(edges = SelfEdge(name, attributes, toMany, optional) +: edges)
+//    def selfEdge(
+//      name: String,
+//      attributes: Seq[Attribute] = Seq.empty,
+//      toMany: Boolean = false,
+//      optional: Boolean = false
+//    ): StateBuilder =
+//      this.copy(edges = SelfEdge(name, attributes, toMany, optional) +: edges)
 
     def attribute(attribute: Attribute): StateBuilder = this.copy(attributes = attribute +: attributes)
 

@@ -22,17 +22,7 @@ object RenderCreateMethod2 {
   def renderCreateMethod(vertex: WithBuilders#Vertex, state: WithBuilders#VertexState): String = {
     val params = renderParams(vertex, state)
 
-    val edges = state.edges.flatMap {
-      case Lake.OtherEdge(
-        name,
-        to,
-        optional,
-        toMany,
-        attribute
-      ) => Some()
-
-      case Lake.SelfEdge(_, _, _, _) => None
-    }
+    val edges = state.edges.flatMap { _ => Some() }
 
     val query =
       s"""
@@ -72,13 +62,7 @@ object RenderCreateMethod2 {
   def renderEdgeHere(
     vertex: WithBuilders#Vertex,
     state: WithBuilders#VertexState
-  )(edge: WithBuilders#Edge): String = {
-    edge match {
-      case Lake.OtherEdge(name, to, optional, toMany, attribute) => "???"
-
-      case Lake.SelfEdge(name, attribute, optional, toMany) => "???"
-    }
-  }
+  )(edge: WithBuilders#Edge): String = ???
 
   private def renderNeo4jTx(query: String, params: String): String =
     s"""

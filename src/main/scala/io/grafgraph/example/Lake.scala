@@ -22,30 +22,30 @@ object Lake extends WithBuilders {
 //      vertex("Artifact")
       (v("WorkflowArtifact") extendz artifactClazzDefn)
         .state("Placeholder")
-          .otherEdge("definition", artifactDefn.states.head)
+          .edge("definition", artifactDefn.states.head)
           .attribute(boolean("exists", false))
         .state("Exists")
-          .otherEdge("definition", artifactDefn.states.head)
+          .edge("definition", artifactDefn.states.head)
           .attribute(boolean("exists", true))
       .done
 
     val workflowDefinition: Lake.Vertex =
       vertex("WorkflowDefn")
       .state("Instance")
-        .otherEdge("artifactDefinition", artifactDefn.states.head, toMany = true)
+        .edge("artifactDefinition", artifactDefn.states.head, toMany = true)
         .attribute(Attr.String("definition"))
       .done
 
     val workflowInstance: Lake.Vertex =
       vertex("WorkflowInstance")
         .state("Running")
-          .otherEdge("output", artifact.states.head, toMany = true)
-          .otherEdge("definition", workflowDefinition.states.head)
+          .edge("output", artifact.states.head, toMany = true)
+          .edge("definition", workflowDefinition.states.head)
           .attribute(Attr.String("jobUid"))
           .attribute(Attr.String("status", Some("Running")))
         .state("Complete")
-          .otherEdge("output", artifact.states.head, toMany = true)
-          .otherEdge("definition", workflowDefinition.states.head)
+          .edge("output", artifact.states.head, toMany = true)
+          .edge("definition", workflowDefinition.states.head)
           .attribute(Attr.String("jobUid"))
           .attribute(Attr.String("status"))
       .done

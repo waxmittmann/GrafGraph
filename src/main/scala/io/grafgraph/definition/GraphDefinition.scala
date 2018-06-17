@@ -102,26 +102,34 @@ trait GraphDefinition {
 //    def apply(defn: VertexState): VertexVersion = VertexVersion(NonEmptyList.of(defn))
 //  }
 
-  sealed trait Edge {
-    val name: String
-    val optional: Boolean
-    val toMany: Boolean
-  }
-
-  case class OtherEdge(
+  case class Edge(
     name: String,
     to: VertexState,
     optional: Boolean = false,
     toMany: Boolean = false,
     attribute: Seq[Attribute] = Seq.empty
-  ) extends Edge
+  )
 
-  // tODO: REMOVE FOR NOW
-  case class SelfEdge(
-    name: String,
-    attribute: Seq[Attribute],
-    optional: Boolean = false,
-    toMany: Boolean = false
-  ) extends Edge
+  //  sealed trait Edge {
+//    val name: String
+//    val optional: Boolean
+//    val toMany: Boolean
+//  }
+//
+//  case class OtherEdge(
+//    name: String,
+//    to: VertexState,
+//    optional: Boolean = false,
+//    toMany: Boolean = false,
+//    attribute: Seq[Attribute] = Seq.empty
+//  ) extends Edge
+//
+//  // tODO: REMOVE FOR NOW
+//  case class SelfEdge(
+//    name: String,
+//    attribute: Seq[Attribute],
+//    optional: Boolean = false,
+//    toMany: Boolean = false
+//  ) extends Edge
 
 }

@@ -40,28 +40,12 @@ object GraphDaoRenderer {
   private def uncapitalize(str: String) = str.head.toLower + str.tail
 
   def writeEdge(self: Lake.Vertex, e: Lake.Edge): String = {
-    e match {
-        // Hmm ok, so here I need a concrete instance
-      case Lake.OtherEdge(name: String, to: Lake.Vertex, optional: Boolean, toMany: Boolean, attribute: Seq[Attribute]) => {
-
-        // Ignore attribute for now
-        // don't do optional; use toMany for that
-        if (toMany) {
-          s"${uncapitalize(name)}s: Seq[${to.name}],"
-        } else {
-          s"${uncapitalize(name)}: ${to.name},"
-        }
-
-      }
-
-      case Lake.SelfEdge(name, attribute, optional, toMany) => {
-        if (toMany) {
-          s"${uncapitalize(name)}s: Seq[${self.name}],"
-        } else {
-          s"${uncapitalize(name)}: ${self.name},"
-        }
-
-      }
+    // Ignore attribute for now
+    // don't do optional; use toMany for that
+    if (e.toMany) {
+      s"${uncapitalize(e.name)}s: Seq[${e.to.name}],"
+    } else {
+      s"${uncapitalize(e.name)}: ${e.to.name},"
     }
   }
 
