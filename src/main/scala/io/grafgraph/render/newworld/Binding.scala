@@ -57,6 +57,27 @@ object Renderers {
   def renderAttribute(`this`: VertexState)(attr: Attribute): String = s"${attr.name}: ${dataName(`this`)}.${attr.name}"
   def getParent(ancestors: Seq[VertexState]): VertexState = ancestors.last
 
+
+  def buildInput(bindings: Map[String, Binding]): String = {
+
+  }
+
+  def render(`this`: VertexState): String = {
+    val prefix = lp("createRenderer")
+
+    val header = s"def create(input: ${`this`.parent}.${`this`.name}) {"
+
+    val r = rootRenderer(`this`)
+    val inputPart = s"val params = Map[String, AnyRef](${buildInput(r.bindings)}).asJava"
+    val queryPart = r.statement.mkString("\n")
+
+    val footer = "}"
+
+    s"$header\n${indentWith("  ", s"$inputPart\n$queryPart")}\n$footer"
+
+
+  }
+
   /* Root renderer */
   def rootRenderer(`this`: VertexState): RenderedOutput = {
     val renderedEdges: Seq[RenderedOutput] = `this`.edges.flatMap { e =>
@@ -129,10 +150,10 @@ object Renderers {
   }
 
   /* Helpers */
-  def renderFullVertexState(`this`: VertexState, indent: String) = {
-    val prefix = lp("createRenderer")
+  def renderFullVertexState(`this`: VertexState, indent: String): String = {
+    val queryPart = s"""$indent(${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )"""
 
-      s"""$prefix$indent(${scriptName(`this`)} ${labels(`this`)} { ${`this`.instanceAttributes.map(renderAttribute(`this`)).mkString(",")} } )"""
+    queryPart
   }
 
 
